@@ -1,6 +1,9 @@
-from datetime import datetime
 from uuid import UUID
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+
+class CreateGameRequest(BaseModel):
+    difficulty: int = Field(default=3, ge=1, le=6)  # 1-6, default Medium
 
 
 class MoveRequest(BaseModel):
@@ -21,6 +24,7 @@ class GameResponse(BaseModel):
     turn: str
     result: str | None
     current_position: str
+    difficulty: int
     moves: list[MoveInfo] = []
 
     class Config:

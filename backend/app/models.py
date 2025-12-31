@@ -15,6 +15,7 @@ class Game(Base):
     current_position = Column(Text, nullable=False)
     turn = Column(String(10), nullable=False, default="white")
     result = Column(String(20), nullable=True)
+    difficulty = Column(Integer, nullable=False, default=3)  # 1-6, default Medium
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

@@ -6,9 +6,9 @@ from sqlalchemy.orm import Session
 
 from .database import get_db, engine, Base
 from .models import Game, Move
-from .schemas import GameResponse, MoveRequest, MoveResponse, MoveInfo
+from .schemas import CreateGameRequest, GameResponse, MoveRequest, MoveResponse, MoveInfo
 from .services.chess_service import ChessService, STARTING_FEN
-from .services.ai_service import RandomAI
+from .services.ai_service import StockfishAI
 
 app = FastAPI(title="Chess API", version="1.0.0")
 
@@ -20,7 +20,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-ai = RandomAI()
+ai = StockfishAI()
 
 
 @app.on_event("startup")
@@ -29,11 +29,15 @@ def on_startup():
 
 
 @app.post("/games", response_model=GameResponse, status_code=201)
-def create_game(db: Session = Depends(get_db)):
+def create_game(
+    request: CreateGameRequest = CreateGameRequest(),
+    db: Session = Depends(get_db),
+):
     game = Game(
         current_position=STARTING_FEN,
         turn="white",
         status="active",
+        difficulty=request.difficulty,
     )
     db.add(game)
     db.commit()
@@ -45,6 +49,7 @@ def create_game(db: Session = Depends(get_db)):
         turn=game.turn,
         result=game.result,
         current_position=game.current_position,
+        difficulty=game.difficulty,
         moves=[],
     )
 
@@ -66,6 +71,7 @@ def get_game(game_id: UUID, db: Session = Depends(get_db)):
         turn=game.turn,
         result=game.result,
         current_position=game.current_position,
+        difficulty=game.difficulty,
         moves=moves,
     )
 
@@ -117,7 +123,7 @@ def submit_move(game_id: UUID, move_req: MoveRequest, db: Session = Depends(get_
         )
 
     # Computer move
-    computer_move_uci = ai.select_move(chess_svc)
+    computer_move_uci = ai.select_move(chess_svc.fen, game.difficulty)
     if computer_move_uci:
         move_number += 1
         notation = chess_svc.make_move(computer_move_uci)

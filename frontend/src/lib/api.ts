@@ -6,8 +6,18 @@ export interface GameResponse {
   turn: "white" | "black";
   result: "white_win" | "black_win" | "draw" | null;
   current_position: string;
+  difficulty: number;
   moves: { move_number: number; move: string }[];
 }
+
+export const DIFFICULTY_LABELS: Record<number, string> = {
+  1: "Beginner",
+  2: "Easy",
+  3: "Medium",
+  4: "Hard",
+  5: "Expert",
+  6: "Maximum",
+};
 
 export interface MoveResponse {
   status: "active" | "finished";
@@ -17,9 +27,13 @@ export interface MoveResponse {
   last_moves: string[];
 }
 
-export async function createGame(): Promise<GameResponse> {
+export async function createGame(difficulty: number = 3): Promise<GameResponse> {
   const res = await fetch(`${API_BASE}/games`, {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ difficulty }),
   });
   if (!res.ok) {
     throw new Error("Failed to create game");

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import ChessBoard from "@/components/chess/ChessBoard";
-import { getGame, makeMove, type GameResponse } from "@/lib/api";
+import { getGame, makeMove, DIFFICULTY_LABELS, type GameResponse } from "@/lib/api";
 
 export default function Game() {
   const { gameId } = useParams<{ gameId: string }>();
@@ -77,7 +77,12 @@ export default function Game() {
         <Button variant="ghost" onClick={() => navigate("/")}>
           ← Back
         </Button>
-        <h1 className="text-2xl font-bold">Chess</h1>
+        <div className="text-center">
+          <h1 className="text-2xl font-bold">Chess</h1>
+          <p className="text-sm text-muted-foreground">
+            {DIFFICULTY_LABELS[game.difficulty]}
+          </p>
+        </div>
         <div className="w-16" /> {/* Spacer for alignment */}
       </div>
 

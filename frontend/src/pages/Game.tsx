@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { Chess } from "chess.js";
 import { Button } from "@/components/ui/button";
 import ChessBoard from "@/components/chess/ChessBoard";
 import { getGame, makeMove, DIFFICULTY_LABELS, type GameResponse } from "@/lib/api";
@@ -23,8 +24,34 @@ export default function Game() {
     if (!gameId || !game || game.status === "finished") return false;
 
     setMoveError(null);
-    const move = promotion ? `${from}${to}${promotion}` : `${from}${to}`;
 
+    // Validate move locally using chess.js
+    const chess = new Chess(game.current_position);
+    const moveResult = chess.move({
+      from,
+      to,
+      promotion: promotion as "q" | "r" | "b" | "n" | undefined,
+    });
+
+    if (!moveResult) {
+      setMoveError("Invalid move");
+      return false;
+    }
+
+    // Immediately update board with player's move
+    const positionAfterPlayerMove = chess.fen();
+    setGame((prev) =>
+      prev
+        ? {
+            ...prev,
+            current_position: positionAfterPlayerMove,
+            turn: "black",
+          }
+        : null
+    );
+
+    // Call backend for computer's response
+    const move = promotion ? `${from}${to}${promotion}` : `${from}${to}`;
     try {
       const result = await makeMove(gameId, move);
       setGame((prev) =>
@@ -40,6 +67,16 @@ export default function Game() {
       );
       return true;
     } catch (err) {
+      // Rollback to previous position on error
+      setGame((prev) =>
+        prev
+          ? {
+              ...prev,
+              current_position: game.current_position,
+              turn: "white",
+            }
+          : null
+      );
       setMoveError(err instanceof Error ? err.message : "Invalid move");
       return false;
     }

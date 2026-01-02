@@ -27,7 +27,7 @@ export class EcsStack extends cdk.Stack {
     this.cluster = new ecs.Cluster(this, 'ChessCluster', {
       vpc: props.vpc,
       clusterName: `${CONFIG.projectName}-cluster`,
-      containerInsights: false, // Disabled for cost
+      // containerInsights defaults to disabled
     });
 
     // CloudWatch Log Group

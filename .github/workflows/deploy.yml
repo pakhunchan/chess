@@ -51,5 +51,5 @@ jobs:
           # Phase 3: ALB + SSL cert
           npx cdk deploy ChessAlbStack --require-approval never
 
-          # Phase 4: ECS Fargate (uncomment when Phase 3 is validated)
-          # npx cdk deploy ChessEcsStack --require-approval never
+          # Phase 4: ECS Fargate
+          npx cdk deploy ChessEcsStack --require-approval never

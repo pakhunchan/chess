@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Chess } from "chess.js";
 import { Button } from "@/components/ui/button";
 import ChessBoard from "@/components/chess/ChessBoard";
+import { getCapturedPieces, CapturedPiecesColumn } from "@/components/chess/CapturedPieces";
 import { getGame, makeMove, DIFFICULTY_LABELS, type GameResponse } from "@/lib/api";
 
 export default function Game() {
@@ -138,12 +139,22 @@ export default function Game() {
         {moveError && <p className="text-destructive text-sm mt-1">{moveError}</p>}
       </div>
 
-      <ChessBoard
-        position={game.current_position}
-        onMove={handleMove}
-        disabled={game.status === "finished" || game.turn === "black"}
-        highlightSquares={lastMove}
-      />
+      <div className="flex items-center gap-4">
+        <CapturedPiecesColumn
+          pieces={getCapturedPieces(game.current_position).capturedBlack}
+          color="dark"
+        />
+        <ChessBoard
+          position={game.current_position}
+          onMove={handleMove}
+          disabled={game.status === "finished" || game.turn === "black"}
+          highlightSquares={lastMove}
+        />
+        <CapturedPiecesColumn
+          pieces={getCapturedPieces(game.current_position).capturedWhite}
+          color="light"
+        />
+      </div>
 
       {game.status === "finished" && (
         <Button onClick={() => navigate("/")}>New Game</Button>

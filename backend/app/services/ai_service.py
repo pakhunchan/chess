@@ -20,7 +20,11 @@ class StockfishAI:
 
         try:
             with chess.engine.SimpleEngine.popen_uci(STOCKFISH_PATH) as engine:
-                engine.configure({"Skill Level": skill_level})
+                engine.configure({
+                    "Skill Level": skill_level,
+                    "Hash": 16,      # Limit hash table to 16 MB (default is 16, but be explicit)
+                    "Threads": 1,    # Single thread to reduce memory usage
+                })
 
                 board = chess.Board(fen)
                 if board.is_game_over():

@@ -4,11 +4,11 @@ import chess.engine
 # Map difficulty level (1-6) to Stockfish Skill Level (0-20)
 DIFFICULTY_TO_SKILL = {
     1: 1,   # Beginner (~800 ELO)
-    2: 5,   # Easy (~1200 ELO)
-    3: 10,  # Medium (~1600 ELO)
-    4: 15,  # Hard (~2000 ELO)
-    5: 18,  # Expert (~2500 ELO)
-    6: 20,  # Maximum (~3500+ ELO)
+    2: 3,   # Easy (~1000 ELO)
+    3: 6,   # Medium (~1300 ELO)
+    4: 10,  # Hard (~1600 ELO)
+    5: 13,  # Expert (~1900 ELO)
+    6: 16,  # Insane (~2200 ELO)
 }
 
 STOCKFISH_PATH = "/usr/games/stockfish"

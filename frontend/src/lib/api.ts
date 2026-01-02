@@ -16,7 +16,7 @@ export const DIFFICULTY_LABELS: Record<number, string> = {
   3: "Medium",
   4: "Hard",
   5: "Expert",
-  6: "Maximum",
+  6: "Insane",
 };
 
 export interface MoveResponse {

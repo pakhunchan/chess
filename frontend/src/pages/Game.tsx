@@ -11,6 +11,7 @@ export default function Game() {
   const [game, setGame] = useState<GameResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [moveError, setMoveError] = useState<string | null>(null);
+  const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null);
 
   useEffect(() => {
     if (!gameId) return;
@@ -40,6 +41,7 @@ export default function Game() {
 
     // Immediately update board with player's move
     const positionAfterPlayerMove = chess.fen();
+    setLastMove({ from, to });
     setGame((prev) =>
       prev
         ? {
@@ -54,6 +56,14 @@ export default function Game() {
     const move = promotion ? `${from}${to}${promotion}` : `${from}${to}`;
     try {
       const result = await makeMove(gameId, move);
+      // Update lastMove to computer's move (last element of last_moves)
+      const computerMove = result.last_moves[result.last_moves.length - 1];
+      if (computerMove && computerMove.length >= 4) {
+        setLastMove({
+          from: computerMove.slice(0, 2),
+          to: computerMove.slice(2, 4),
+        });
+      }
       setGame((prev) =>
         prev
           ? {
@@ -132,6 +142,7 @@ export default function Game() {
         position={game.current_position}
         onMove={handleMove}
         disabled={game.status === "finished" || game.turn === "black"}
+        highlightSquares={lastMove}
       />
 
       {game.status === "finished" && (

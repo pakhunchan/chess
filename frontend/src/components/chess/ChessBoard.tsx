@@ -4,6 +4,7 @@ interface ChessBoardProps {
   position: string;
   onMove: (from: string, to: string, promotion?: string) => boolean | Promise<boolean>;
   disabled?: boolean;
+  highlightSquares?: { from: string; to: string } | null;
 }
 
 interface PieceDropArgs {
@@ -14,7 +15,7 @@ interface PieceDropArgs {
   targetSquare: string | null;
 }
 
-export default function ChessBoard({ position, onMove, disabled }: ChessBoardProps) {
+export default function ChessBoard({ position, onMove, disabled, highlightSquares }: ChessBoardProps) {
   const handlePieceDrop = ({
     piece,
     sourceSquare,
@@ -41,6 +42,13 @@ export default function ChessBoard({ position, onMove, disabled }: ChessBoardPro
     return result;
   };
 
+  const squareStyles = highlightSquares
+    ? {
+        [highlightSquares.from]: { backgroundColor: "rgba(255, 255, 0, 0.4)" },
+        [highlightSquares.to]: { backgroundColor: "rgba(255, 255, 0, 0.4)" },
+      }
+    : {};
+
   return (
     <div className="w-full max-w-[600px]">
       <Chessboard
@@ -49,6 +57,7 @@ export default function ChessBoard({ position, onMove, disabled }: ChessBoardPro
           onPieceDrop: handlePieceDrop,
           allowDragging: !disabled,
           boardOrientation: "white",
+          squareStyles,
           boardStyle: {
             borderRadius: "8px",
             boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",

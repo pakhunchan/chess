@@ -3,6 +3,7 @@ import { Chessboard } from "react-chessboard";
 interface ChessBoardProps {
   position: string;
   onMove: (from: string, to: string, promotion?: string) => boolean | Promise<boolean>;
+  onPromotionNeeded?: (from: string, to: string) => void;
   disabled?: boolean;
   highlightSquares?: { from: string; to: string } | null;
 }
@@ -15,7 +16,7 @@ interface PieceDropArgs {
   targetSquare: string | null;
 }
 
-export default function ChessBoard({ position, onMove, disabled, highlightSquares }: ChessBoardProps) {
+export default function ChessBoard({ position, onMove, onPromotionNeeded, disabled, highlightSquares }: ChessBoardProps) {
   const handlePieceDrop = ({
     piece,
     sourceSquare,
@@ -29,9 +30,13 @@ export default function ChessBoard({ position, onMove, disabled, highlightSquare
       ((piece.pieceType[0] === "w" && targetSquare[1] === "8") ||
         (piece.pieceType[0] === "b" && targetSquare[1] === "1"));
 
-    const promotion = isPromotion ? "q" : undefined; // Auto-promote to queen
+    // If promotion needed, trigger callback and wait for selection
+    if (isPromotion && onPromotionNeeded) {
+      onPromotionNeeded(sourceSquare, targetSquare);
+      return true; // Keep piece at destination visually
+    }
 
-    const result = onMove(sourceSquare, targetSquare, promotion);
+    const result = onMove(sourceSquare, targetSquare);
 
     // Handle both sync and async returns
     if (result instanceof Promise) {

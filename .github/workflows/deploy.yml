@@ -45,8 +45,8 @@ jobs:
           # Phase 1: Network (VPC, subnets, security groups)
           npx cdk deploy ChessNetworkStack --require-approval never
 
-          # Phase 2: Database (uncomment when Phase 1 is validated)
-          # npx cdk deploy ChessDatabaseStack --require-approval never
+          # Phase 2: Database
+          npx cdk deploy ChessDatabaseStack --require-approval never
 
           # Phase 3: ALB + SSL cert (uncomment when Phase 2 is validated)
           # npx cdk deploy ChessAlbStack --require-approval never

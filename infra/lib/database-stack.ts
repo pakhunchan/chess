@@ -25,7 +25,7 @@ export class DatabaseStack extends cdk.Stack {
     // RDS PostgreSQL instance
     this.database = new rds.DatabaseInstance(this, 'ChessDb', {
       engine: rds.DatabaseInstanceEngine.postgres({
-        version: rds.PostgresEngineVersion.VER_16_4,
+        version: rds.PostgresEngineVersion.VER_16,
       }),
       instanceType: ec2.InstanceType.of(
         ec2.InstanceClass.T3,
@@ -62,7 +62,7 @@ export class DatabaseStack extends cdk.Stack {
       // Parameter group
       parameterGroup: new rds.ParameterGroup(this, 'ChessDbParams', {
         engine: rds.DatabaseInstanceEngine.postgres({
-          version: rds.PostgresEngineVersion.VER_16_4,
+          version: rds.PostgresEngineVersion.VER_16,
         }),
         parameters: {
           log_statement: 'ddl',

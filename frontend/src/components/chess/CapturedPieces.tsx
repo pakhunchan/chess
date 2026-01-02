@@ -16,6 +16,14 @@ const PIECE_SYMBOLS: Record<string, string> = {
   q: "♛",
 };
 
+const PIECE_VALUES: Record<string, number> = {
+  p: 1,
+  n: 3,
+  b: 3,
+  r: 5,
+  q: 9,
+};
+
 function countPieces(fen: string) {
   const boardPart = fen.split(" ")[0];
   const white = { p: 0, n: 0, b: 0, r: 0, q: 0 };
@@ -56,10 +64,19 @@ export function getCapturedPieces(fen: string) {
   return { capturedWhite, capturedBlack };
 }
 
+export function getPlayerNetScore(fen: string): number {
+  const { capturedWhite, capturedBlack } = getCapturedPieces(fen);
+
+  const playerScore = capturedBlack.reduce((sum, p) => sum + PIECE_VALUES[p], 0);
+  const opponentScore = capturedWhite.reduce((sum, p) => sum + PIECE_VALUES[p], 0);
+
+  return playerScore - opponentScore;
+}
+
 export function CapturedPiecesColumn({ pieces, color }: CapturedPiecesColumnProps) {
   return (
     <div
-      className={`flex flex-col items-center gap-1 text-6xl w-16 ${
+      className={`flex flex-col flex-wrap content-start gap-1 text-4xl w-16 max-h-[600px] ${
         color === "dark" ? "text-gray-800" : "text-gray-300"
       }`}
     >

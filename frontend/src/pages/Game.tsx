@@ -3,7 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Chess } from "chess.js";
 import { Button } from "@/components/ui/button";
 import ChessBoard from "@/components/chess/ChessBoard";
-import { getCapturedPieces, CapturedPiecesColumn } from "@/components/chess/CapturedPieces";
+import PromotionModal from "@/components/chess/PromotionModal";
+import { getCapturedPieces, getPlayerNetScore, CapturedPiecesColumn } from "@/components/chess/CapturedPieces";
 import { getGame, makeMove, DIFFICULTY_LABELS, type GameResponse } from "@/lib/api";
 
 export default function Game() {
@@ -13,6 +14,7 @@ export default function Game() {
   const [error, setError] = useState<string | null>(null);
   const [moveError, setMoveError] = useState<string | null>(null);
   const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null);
+  const [pendingPromotion, setPendingPromotion] = useState<{ from: string; to: string } | null>(null);
 
   useEffect(() => {
     if (!gameId) return;
@@ -93,6 +95,17 @@ export default function Game() {
     }
   };
 
+  const handlePromotionNeeded = (from: string, to: string) => {
+    setPendingPromotion({ from, to });
+  };
+
+  const handlePromotionSelect = (piece: "q" | "r" | "b" | "n") => {
+    if (!pendingPromotion) return;
+    const { from, to } = pendingPromotion;
+    setPendingPromotion(null);
+    handleMove(from, to, piece);
+  };
+
   if (error) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
@@ -126,7 +139,7 @@ export default function Game() {
           ← Back
         </Button>
         <div className="text-center">
-          <h1 className="text-2xl font-bold">Chess</h1>
+          <h1 className="text-2xl font-bold">Computer</h1>
           <p className="text-sm text-muted-foreground">
             {DIFFICULTY_LABELS[game.difficulty]}
           </p>
@@ -137,6 +150,15 @@ export default function Game() {
       <div className="text-center">
         <p className="text-lg font-medium">{getStatusText()}</p>
         {moveError && <p className="text-destructive text-sm mt-1">{moveError}</p>}
+        {(() => {
+          const score = getPlayerNetScore(game.current_position);
+          if (score === 0) return null;
+          return (
+            <p className={`text-sm font-medium ${score > 0 ? "text-green-600" : "text-red-500"}`}>
+              {score > 0 ? `+${score}` : score}
+            </p>
+          );
+        })()}
       </div>
 
       <div className="flex items-center gap-4">
@@ -147,6 +169,7 @@ export default function Game() {
         <ChessBoard
           position={game.current_position}
           onMove={handleMove}
+          onPromotionNeeded={handlePromotionNeeded}
           disabled={game.status === "finished" || game.turn === "black"}
           highlightSquares={lastMove}
         />
@@ -158,6 +181,10 @@ export default function Game() {
 
       {game.status === "finished" && (
         <Button onClick={() => navigate("/")}>New Game</Button>
+      )}
+
+      {pendingPromotion && (
+        <PromotionModal onSelect={handlePromotionSelect} />
       )}
     </div>
   );

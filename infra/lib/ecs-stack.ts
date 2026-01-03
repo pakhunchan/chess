@@ -62,7 +62,7 @@ export class EcsStack extends cdk.Stack {
       environment: {
         PYTHONUNBUFFERED: '1',
         DB_NAME: CONFIG.dbName,
-        CORS_ORIGINS: `${CONFIG.frontendUrl},http://localhost:5173,http://127.0.0.1:5173`,
+        CORS_ORIGINS: `https://${CONFIG.frontendSubdomain}.${CONFIG.domainName},http://localhost:5173,http://127.0.0.1:5173`,
       },
       secrets: {
         DB_USER: ecs.Secret.fromSecretsManager(props.dbSecret, 'username'),

@@ -5,7 +5,7 @@ export const CONFIG = {
   // Domain
   domainName: 'pakhunchan.com',
   apiSubdomain: 'chess-api',
-  frontendUrl: 'https://chess.pakhunchan.com',
+  frontendSubdomain: 'chess',
 
   // GitHub
   githubRepo: 'pakhunchan/chess',

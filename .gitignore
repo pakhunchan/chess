@@ -15,3 +15,6 @@ build/
 .ruff_cache/
 node_modules/
 bun.lock
+
+# Plan documents
+*_PLAN.md

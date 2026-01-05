@@ -2,11 +2,13 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { createGame, DIFFICULTY_LABELS } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 const DIFFICULTIES = [1, 2, 3, 4, 5, 6] as const;
 
 export default function Home() {
   const navigate = useNavigate();
+  const { user, loading: authLoading, signInWithGoogle, signOut } = useAuth();
   const [loading, setLoading] = useState(false);
   const [difficulty, setDifficulty] = useState(3);
 
@@ -51,9 +53,33 @@ export default function Home() {
           {loading ? "Starting..." : "Play as Guest"}
         </Button>
 
-        <Button size="lg" variant="outline" disabled>
-          Sign In (Coming Soon)
-        </Button>
+        {authLoading ? (
+          <Button size="lg" variant="outline" disabled>
+            Loading...
+          </Button>
+        ) : user ? (
+          <div className="flex flex-col gap-3 items-center">
+            <div className="flex items-center gap-3 px-4 py-2 bg-muted rounded-lg">
+              {user.photoURL && (
+                <img
+                  src={user.photoURL}
+                  alt={user.displayName || "User"}
+                  className="w-8 h-8 rounded-full"
+                />
+              )}
+              <span className="text-sm font-medium">
+                {user.displayName || user.email}
+              </span>
+            </div>
+            <Button size="lg" variant="outline" onClick={signOut}>
+              Sign Out
+            </Button>
+          </div>
+        ) : (
+          <Button size="lg" variant="outline" onClick={signInWithGoogle}>
+            Sign In with Google
+          </Button>
+        )}
       </div>
     </div>
   );

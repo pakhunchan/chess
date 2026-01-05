@@ -41,3 +41,29 @@ class MoveResponse(BaseModel):
 
 class ErrorResponse(BaseModel):
     detail: str
+
+
+class UserResponse(BaseModel):
+    id: UUID
+    email: str | None
+    display_name: str | None
+    photo_url: str | None
+
+    class Config:
+        from_attributes = True
+
+
+class GameSummary(BaseModel):
+    game_id: UUID
+    status: str
+    result: str | None
+    difficulty: int
+    move_count: int
+    created_at: str
+
+    class Config:
+        from_attributes = True
+
+
+class UserGamesResponse(BaseModel):
+    games: list[GameSummary]

@@ -6,10 +6,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from .database import get_db, engine, Base
-from .models import Game, Move
-from .schemas import CreateGameRequest, GameResponse, MoveRequest, MoveResponse, MoveInfo
+from .models import Game, Move, User
+from .schemas import CreateGameRequest, GameResponse, MoveRequest, MoveResponse, MoveInfo, UserResponse, GameSummary, UserGamesResponse
 from .services.chess_service import ChessService, STARTING_FEN
 from .services.ai_service import StockfishAI
+from .dependencies import get_current_user_optional, get_current_user_required
 
 app = FastAPI(title="Chess API", version="1.0.0")
 
@@ -38,12 +39,14 @@ def on_startup():
 def create_game(
     request: CreateGameRequest = CreateGameRequest(),
     db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_current_user_optional),
 ):
     game = Game(
         current_position=STARTING_FEN,
         turn="white",
         status="active",
         difficulty=request.difficulty,
+        user_id=current_user.id if current_user else None,
     )
     db.add(game)
     db.commit()
@@ -165,3 +168,37 @@ def submit_move(game_id: UUID, move_req: MoveRequest, db: Session = Depends(get_
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
+
+
+@app.get("/users/me", response_model=UserResponse)
+def get_current_user_profile(
+    current_user: User = Depends(get_current_user_required),
+):
+    return UserResponse(
+        id=current_user.id,
+        email=current_user.email,
+        display_name=current_user.display_name,
+        photo_url=current_user.photo_url,
+    )
+
+
+@app.get("/users/me/games", response_model=UserGamesResponse)
+def get_current_user_games(
+    current_user: User = Depends(get_current_user_required),
+    db: Session = Depends(get_db),
+):
+    games = db.query(Game).filter(Game.user_id == current_user.id).order_by(Game.created_at.desc()).all()
+
+    game_summaries = [
+        GameSummary(
+            game_id=game.id,
+            status=game.status,
+            result=game.result,
+            difficulty=game.difficulty,
+            move_count=len(game.moves),
+            created_at=game.created_at.isoformat(),
+        )
+        for game in games
+    ]
+
+    return UserGamesResponse(games=game_summaries)

@@ -1,7 +1,22 @@
+import { auth } from "./firebase";
+
 const API_BASE = import.meta.env.VITE_API_URL;
 
 if (!API_BASE) {
   throw new Error("VITE_API_URL environment variable is not set");
+}
+
+async function getAuthHeaders(): Promise<HeadersInit> {
+  const user = auth.currentUser;
+  if (!user) {
+    return { "Content-Type": "application/json" };
+  }
+
+  const token = await user.getIdToken();
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
 }
 
 export interface GameResponse {
@@ -34,9 +49,7 @@ export interface MoveResponse {
 export async function createGame(difficulty: number = 3): Promise<GameResponse> {
   const res = await fetch(`${API_BASE}/games`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: await getAuthHeaders(),
     body: JSON.stringify({ difficulty }),
   });
   if (!res.ok) {
@@ -59,9 +72,7 @@ export async function makeMove(
 ): Promise<MoveResponse> {
   const res = await fetch(`${API_BASE}/games/${gameId}/move`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: await getAuthHeaders(),
     body: JSON.stringify({ move }),
   });
   if (!res.ok) {

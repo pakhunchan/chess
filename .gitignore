@@ -15,3 +15,6 @@ build/
 .ruff_cache/
 node_modules/
 bun.lock
+
+# Firebase service account key (secret)
+firebase-service-account.json

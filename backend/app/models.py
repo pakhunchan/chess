@@ -7,6 +7,20 @@ from sqlalchemy.orm import relationship
 from .database import Base
 
 
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    firebase_uid = Column(String(128), unique=True, nullable=False, index=True)
+    email = Column(String(255), nullable=True)
+    display_name = Column(String(255), nullable=True)
+    photo_url = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    games = relationship("Game", back_populates="user")
+
+
 class Game(Base):
     __tablename__ = "games"
 
@@ -16,9 +30,11 @@ class Game(Base):
     turn = Column(String(10), nullable=False, default="white")
     result = Column(String(20), nullable=True)
     difficulty = Column(Integer, nullable=False, default=3)  # 1-6, default Medium
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    user = relationship("User", back_populates="games")
     moves = relationship("Move", back_populates="game", order_by="Move.move_number")
 
 

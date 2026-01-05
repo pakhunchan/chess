@@ -5,3 +5,4 @@ psycopg2-binary==2.9.9
 python-chess==1.999
 pydantic==2.5.3
 alembic==1.13.1
+firebase-admin==6.4.0

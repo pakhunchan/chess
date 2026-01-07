@@ -50,6 +50,12 @@ export class EcsStack extends cdk.Stack {
     // Grant task role access to read secrets
     props.dbSecret.grantRead(this.taskDefinition.taskRole);
 
+    // Firebase service account secret (for JWT verification)
+    const firebaseSecret = secretsmanager.Secret.fromSecretNameV2(
+      this, 'FirebaseSecret', 'chess/firebase-service-account'
+    );
+    firebaseSecret.grantRead(this.taskDefinition.taskRole);
+
     // Container Definition - built from local Dockerfile via CDK assets
     const container = this.taskDefinition.addContainer('ChessApi', {
       image: ecs.ContainerImage.fromAsset(path.join(__dirname, '../../backend')),
@@ -69,6 +75,7 @@ export class EcsStack extends cdk.Stack {
         DB_PASSWORD: ecs.Secret.fromSecretsManager(props.dbSecret, 'password'),
         DB_HOST: ecs.Secret.fromSecretsManager(props.dbSecret, 'host'),
         DB_PORT: ecs.Secret.fromSecretsManager(props.dbSecret, 'port'),
+        FIREBASE_SERVICE_ACCOUNT_KEY: ecs.Secret.fromSecretsManager(firebaseSecret),
       },
       portMappings: [
         {

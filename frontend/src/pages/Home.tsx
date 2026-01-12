@@ -8,7 +8,7 @@ const DIFFICULTIES = [1, 2, 3, 4, 5, 6] as const;
 
 export default function Home() {
   const navigate = useNavigate();
-  const { user, loading: authLoading, signInWithGoogle, signOut } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
   const [loading, setLoading] = useState(false);
   const [difficulty, setDifficulty] = useState(3);
 
@@ -49,9 +49,14 @@ export default function Home() {
             </Button>
           </div>
         ) : (
-          <Button variant="outline" onClick={signInWithGoogle}>
-            Sign In with Google
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={() => navigate("/login")}>
+              Log In
+            </Button>
+            <Button variant="default" onClick={() => navigate("/register")}>
+              Register
+            </Button>
+          </div>
         )}
       </div>
 

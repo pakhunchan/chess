@@ -81,3 +81,18 @@ export async function makeMove(
   }
   return res.json();
 }
+return res.json();
+}
+
+export async function registerUser(username: string): Promise<{ status: string; username: string }> {
+  const res = await fetch(`${API_BASE}/auth/register`, {
+    method: "POST",
+    headers: await getAuthHeaders(),
+    body: JSON.stringify({ username }),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.detail || "Failed to set username");
+  }
+  return res.json();
+}

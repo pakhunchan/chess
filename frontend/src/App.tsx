@@ -3,12 +3,17 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import Home from "@/pages/Home";
 import Game from "@/pages/Game";
 
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/game/:gameId" element={<Game />} />
         </Routes>
       </BrowserRouter>

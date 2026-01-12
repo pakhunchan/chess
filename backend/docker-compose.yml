@@ -7,6 +7,7 @@ services:
       - DATABASE_URL=postgresql://chess:chess@db:5432/chess
       - FIREBASE_SERVICE_ACCOUNT_KEY=/app/firebase-service-account.json
     volumes:
+      - ./app:/app/app
       - ./firebase-service-account.json:/app/firebase-service-account.json:ro
     depends_on:
       db:

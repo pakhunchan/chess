@@ -57,6 +57,7 @@ async def get_current_user_optional(
         user = User(
             firebase_uid=firebase_uid,
             email=decoded.get("email"),
+            username=decoded.get("username"),  # Capture username if present in claims
             display_name=decoded.get("name"),
             photo_url=decoded.get("picture"),
         )

@@ -12,7 +12,11 @@ from .services.chess_service import ChessService, STARTING_FEN
 from .services.ai_service import StockfishAI
 from .dependencies import get_current_user_optional, get_current_user_required
 
+from .routers import auth
+
 app = FastAPI(title="Chess API", version="1.0.0")
+
+app.include_router(auth.router)
 
 CORS_ORIGINS = os.getenv(
     "CORS_ORIGINS",
@@ -176,6 +180,7 @@ def get_current_user_profile(
 ):
     return UserResponse(
         id=current_user.id,
+        username=current_user.username,
         email=current_user.email,
         display_name=current_user.display_name,
         photo_url=current_user.photo_url,

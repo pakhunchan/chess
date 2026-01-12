@@ -6,6 +6,10 @@ class CreateGameRequest(BaseModel):
     difficulty: int = Field(default=3, ge=1, le=6)  # 1-6, default Medium
 
 
+class RegisterRequest(BaseModel):
+    username: str = Field(..., min_length=3, max_length=50, pattern="^[a-zA-Z0-9_-]+$")
+
+
 class MoveRequest(BaseModel):
     move: str
 
@@ -45,6 +49,7 @@ class ErrorResponse(BaseModel):
 
 class UserResponse(BaseModel):
     id: UUID
+    username: str | None
     email: str | None
     display_name: str | None
     photo_url: str | None

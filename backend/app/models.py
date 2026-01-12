@@ -12,6 +12,7 @@ class User(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     firebase_uid = Column(String(128), unique=True, nullable=False, index=True)
+    username = Column(String(50), unique=True, nullable=True, index=True)
     email = Column(String(255), nullable=True)
     display_name = Column(String(255), nullable=True)
     photo_url = Column(Text, nullable=True)

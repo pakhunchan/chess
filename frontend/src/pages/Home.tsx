@@ -24,7 +24,37 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-8 p-8">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-8 p-8 relative">
+      <div className="absolute top-4 right-4">
+        {authLoading ? (
+          <Button variant="outline" disabled>
+            Loading...
+          </Button>
+        ) : user ? (
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 px-4 py-2 bg-muted rounded-lg">
+              {user.photoURL && (
+                <img
+                  src={user.photoURL}
+                  alt={user.displayName || "User"}
+                  className="w-8 h-8 rounded-full"
+                />
+              )}
+              <span className="text-sm font-medium">
+                {user.displayName || user.email}
+              </span>
+            </div>
+            <Button variant="outline" onClick={signOut}>
+              Sign Out
+            </Button>
+          </div>
+        ) : (
+          <Button variant="outline" onClick={signInWithGoogle}>
+            Sign In with Google
+          </Button>
+        )}
+      </div>
+
       <div className="text-center">
         <h1 className="text-5xl font-bold mb-2">Chess</h1>
         <p className="text-muted-foreground">Play against the computer</p>
@@ -50,36 +80,8 @@ export default function Home() {
         </div>
 
         <Button size="lg" onClick={handlePlayAsGuest} disabled={loading}>
-          {loading ? "Starting..." : "Play as Guest"}
+          {loading ? "Starting..." : (user ? "Play" : "Play as Guest")}
         </Button>
-
-        {authLoading ? (
-          <Button size="lg" variant="outline" disabled>
-            Loading...
-          </Button>
-        ) : user ? (
-          <div className="flex flex-col gap-3 items-center">
-            <div className="flex items-center gap-3 px-4 py-2 bg-muted rounded-lg">
-              {user.photoURL && (
-                <img
-                  src={user.photoURL}
-                  alt={user.displayName || "User"}
-                  className="w-8 h-8 rounded-full"
-                />
-              )}
-              <span className="text-sm font-medium">
-                {user.displayName || user.email}
-              </span>
-            </div>
-            <Button size="lg" variant="outline" onClick={signOut}>
-              Sign Out
-            </Button>
-          </div>
-        ) : (
-          <Button size="lg" variant="outline" onClick={signInWithGoogle}>
-            Sign In with Google
-          </Button>
-        )}
       </div>
     </div>
   );

@@ -25,29 +25,36 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-8 p-8 relative">
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
         {authLoading ? (
           <Button variant="outline" disabled>
             Loading...
           </Button>
         ) : user ? (
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3 px-4 py-2 bg-muted rounded-lg">
-              {user.photoURL && (
-                <img
-                  src={user.photoURL}
-                  alt={user.displayName || "User"}
-                  className="w-8 h-8 rounded-full"
-                />
-              )}
-              <span className="text-sm font-medium">
-                {user.displayName || user.email}
-              </span>
+          <>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 px-4 py-2 bg-muted rounded-lg">
+                {user.photoURL && (
+                  <img
+                    src={user.photoURL}
+                    alt={user.displayName || "User"}
+                    className="w-8 h-8 rounded-full"
+                  />
+                )}
+                <span className="text-sm font-medium">
+                  {user.displayName || user.email}
+                </span>
+              </div>
+              <Button variant="outline" onClick={signOut}>
+                Sign Out
+              </Button>
             </div>
-            <Button variant="outline" onClick={signOut}>
-              Sign Out
-            </Button>
-          </div>
+            {!user.emailVerified && (
+              <div className="bg-yellow-500/10 text-yellow-500 text-sm px-3 py-1 rounded-md border border-yellow-500/20">
+                Please verify your email
+              </div>
+            )}
+          </>
         ) : (
           <div className="flex gap-2">
             <Button variant="ghost" onClick={() => navigate("/login")}>

@@ -61,12 +61,10 @@ export default function Register() {
                 return;
             }
 
-            import { registerUser } from "@/lib/api";
-
             // ... existing code ...
 
             // 2. Create Firebase Auth User
-            const user = await registerWithEmail(data.email, data.password);
+            await registerWithEmail(data.email, data.password);
 
             // 3. Sync Username with Backend (Crucial Step)
             await registerUser(data.username);
@@ -143,8 +141,8 @@ export default function Register() {
                             type="password"
                             {...register("confirmPassword", {
                                 required: "Confirm Password is required",
-                                validate: (val) => {
-                                    if (watch("password") != val) {
+                                validate: (val: string) => {
+                                    if (watch("password") !== val) {
                                         return "Your passwords do NOT match";
                                     }
                                 }

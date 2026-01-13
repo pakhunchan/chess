@@ -81,8 +81,7 @@ export async function makeMove(
   }
   return res.json();
 }
-return res.json();
-}
+
 
 export async function registerUser(username: string): Promise<{ status: string; username: string }> {
   const res = await fetch(`${API_BASE}/auth/register`, {

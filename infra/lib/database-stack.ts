@@ -74,6 +74,9 @@ export class DatabaseStack extends cdk.Stack {
     // Store the secret reference
     this.dbSecret = this.database.secret!;
 
+    // Ensure the secret is NOT deleted when the stack is destroyed for "Pause"
+    this.dbSecret.applyRemovalPolicy(cdk.RemovalPolicy.RETAIN);
+
     // Outputs
     new cdk.CfnOutput(this, 'DbEndpoint', {
       value: this.database.instanceEndpoint.hostname,

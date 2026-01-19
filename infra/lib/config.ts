@@ -1,5 +1,5 @@
 export const CONFIG = {
-  // Naming (redeployed 2026-01-07)
+  // Naming (redeployed 2026-01-19)
   projectName: 'chess',
 
   // Domain

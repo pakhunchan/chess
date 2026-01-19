@@ -1,3 +1,4 @@
+# Chess Backend (Triggered redeploy 2026-01-19)
 import os
 from uuid import UUID
 

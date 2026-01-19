@@ -51,5 +51,7 @@ ecsStack.addDependency(albStack);
 // Tags for all resources
 cdk.Tags.of(app).add('Project', CONFIG.projectName);
 cdk.Tags.of(app).add('ManagedBy', 'CDK');
+cdk.Tags.of(app).add('Environment', 'Production');
+cdk.Tags.of(app).add('LastModified', new Date().toISOString());
 
 app.synth();

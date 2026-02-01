@@ -101,5 +101,20 @@ export function useStockfish() {
         setIsAnalyzing(false); // Immediate feedback
     }, []);
 
-    return { isReady, lines, isAnalyzing, evaluatePosition, stopAnalysis };
+    const resetAnalysis = useCallback(() => {
+        if (!workerRef.current) return;
+        shouldIgnoreMessages.current = true;
+        workerRef.current.postMessage("stop");
+        setIsAnalyzing(false);
+        setLines([]);
+    }, []);
+
+    return {
+        isReady,
+        lines,
+        isAnalyzing,
+        evaluatePosition,
+        stopAnalysis,
+        resetAnalysis
+    };
 }

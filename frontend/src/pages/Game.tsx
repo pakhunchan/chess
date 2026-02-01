@@ -221,6 +221,7 @@ export default function Game() {
             <TutorCard
               fen={displayPosition}
               onSelectMove={(move) => handleMove(move.from, move.to)}
+              orientation="white"
             />
           )}
 

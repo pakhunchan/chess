@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Chess } from 'chess.js';
 import { useStockfish } from '../../hooks/useStockfish';
 import { MoveAnalysisCard } from './MoveAnalysisCard';
 
@@ -8,16 +9,30 @@ interface TutorSectionProps {
     orientation?: "white" | "black";
 }
 
-export function TutorCard({ fen, onSelectMove }: TutorSectionProps) {
-    const { isReady, lines, isAnalyzing, evaluatePosition, stopAnalysis } = useStockfish();
+export function TutorCard({ fen, onSelectMove, orientation }: TutorSectionProps) {
+    const { isReady, lines, isAnalyzing, evaluatePosition, resetAnalysis } = useStockfish();
     const [autoExplain, setAutoExplain] = useState(false);
 
     // Trigger analysis when FEN changes
     useEffect(() => {
-        if (isReady && fen) {
-            evaluatePosition(fen, 15);
+        if (!isReady || !fen) return;
+
+        // If orientation is provided (e.g. "white" for user), only analyze when it's our turn
+        if (orientation) {
+            try {
+                const chess = new Chess(fen);
+                const turn = chess.turn() === 'w' ? 'white' : 'black';
+                if (turn !== orientation) {
+                    resetAnalysis();
+                    return;
+                }
+            } catch (e) {
+                console.error("Invalid FEN:", fen);
+            }
         }
-    }, [fen, isReady, evaluatePosition]);
+
+        evaluatePosition(fen, 15);
+    }, [fen, isReady, evaluatePosition, orientation, resetAnalysis]);
 
     // Derived Moves
     const bestMove = lines[0];
@@ -60,9 +75,13 @@ export function TutorCard({ fen, onSelectMove }: TutorSectionProps) {
             {/* Cards Area */}
             <div className="flex flex-col gap-3">
 
-                {!lines.length && isAnalyzing && (
-                    <div className="p-8 text-center text-neutral-500 text-sm animate-pulse border border-neutral-800 rounded-lg">
-                        Thinking...
+                {!lines.length && !bestMove && (
+                    <div className="p-8 text-center text-neutral-500 text-sm border border-neutral-800 rounded-lg">
+                        {isAnalyzing ? (
+                            <span className="animate-pulse">Thinking...</span>
+                        ) : (
+                            <span>Waiting for opponent...</span>
+                        )}
                     </div>
                 )}
 

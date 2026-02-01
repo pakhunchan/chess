@@ -216,25 +216,6 @@ export default function Game() {
 
         {/* Right Col: Info & Tutor */}
         <div className="space-y-6">
-          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6">
-            <h1 className="text-2xl font-bold text-white mb-2">Game Room</h1>
-            <p className="text-neutral-400 font-mono text-sm mb-4">ID: {gameId}</p>
-
-            <div className="mb-4">
-              {getStatusText()}
-            </div>
-
-            {/* Moves List Placeholder (or Captured) */}
-
-            {/* Actions */}
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => navigate("/")}>Quit</Button>
-              {game.status === "finished" && (
-                <Button onClick={() => navigate("/")}>New Game</Button>
-              )}
-            </div>
-          </div>
-
           {/* AI Tutor */}
           {game && (
             <TutorCard
@@ -242,6 +223,14 @@ export default function Game() {
               onSelectMove={(move) => handleMove(move.from, move.to)}
             />
           )}
+
+          {/* Quick Actions (Minimal) */}
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" size="sm" onClick={() => navigate("/")}>Quit</Button>
+            {game && game.status === "finished" && (
+              <Button size="sm" onClick={() => navigate("/")}>New Game</Button>
+            )}
+          </div>
         </div>
       </div>
 

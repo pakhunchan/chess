@@ -14,7 +14,7 @@ class TutorService:
             # 2026 Update: gemini-1.5 is deprecated. Using Gemini 3.
             self.model = genai.GenerativeModel('gemini-3-flash-preview')
 
-    async def explain_move(self, fen: str, move_uci: str, best_move_uci: str | None = None, player_pv: str | None = None, best_pv: str | None = None) -> str:
+    async def explain_move(self, fen: str, move_uci: str, best_move_uci: str | None = None, player_pv: str | None = None, best_pv: str | None = None, alternative_move: str | None = None, alternative_pv: str | None = None) -> str:
         """
         Generates a natural language explanation for a chess move using Gemini.
         """
@@ -35,10 +35,15 @@ class TutorService:
             prompt += f"\nHowever, the engine recommends: {best_move_uci} (Best Move).\n"
             if best_pv:
                  prompt += f"The engine foresees the line: {best_pv}.\n"
+
+        if alternative_move:
+             prompt += f"\nAnother strong option is: {alternative_move} (Alternative).\n"
+             if alternative_pv:
+                  prompt += f"Line: {alternative_pv}.\n"
         
         prompt += """
-        Explain the strategic purpose of the user's move (or the engine's move if the user's move is a mistake) in 2-3 concise sentences.
-        If the user's move is a blunder compared to the best move, briefly explain WHY (e.g. "This loses a pawn because...").
+        Explain the strategic purpose of the best move (and the alternative if provided) in 2-3 concise sentences.
+        Briefly compare why the Best Move is preferred over the Alternative (or the user's move).
         Focus on key concepts like controlling the center, developing pieces, or tactical threats.
         Do not use markdown formatting like bold or italics. Keep it simple text.
         """

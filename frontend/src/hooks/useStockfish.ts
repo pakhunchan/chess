@@ -75,8 +75,8 @@ export function useStockfish() {
         };
 
         worker.postMessage("uci");
-        // Configure to 3 lines
-        worker.postMessage("setoption name MultiPV value 3");
+        // Configure to 2 lines (Top 2 Moves)
+        worker.postMessage("setoption name MultiPV value 2");
 
         return () => {
             worker.terminate();

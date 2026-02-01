@@ -106,12 +106,14 @@ export async function explainMove(
   move: string,
   best_move?: string,
   player_pv?: string,
-  best_pv?: string
+  best_pv?: string,
+  alternative_move?: string,
+  alternative_pv?: string
 ): Promise<TutorResponse> {
   const res = await fetch(`${API_BASE}/tutor/explain`, {
     method: "POST",
     headers: await getAuthHeaders(),
-    body: JSON.stringify({ fen, move, best_move, player_pv, best_pv }),
+    body: JSON.stringify({ fen, move, best_move, player_pv, best_pv, alternative_move, alternative_pv }),
   });
   if (!res.ok) {
     throw new Error("Failed to get explanation");

@@ -77,7 +77,7 @@ export function MoveAnalysisCard({ fen, move, rank, bestMove, alternative, autoE
 
     // Auto-Explain Logic
     useEffect(() => {
-        if (autoExplain && !explanation && !isExplaining && isAnalyzing && move.depth >= 10) {
+        if (autoExplain && !explanation && !isExplaining && isAnalyzing && move.depth >= 15) {
             handleExplain();
         }
     }, [autoExplain, explanation, isExplaining, isAnalyzing, move.depth]);

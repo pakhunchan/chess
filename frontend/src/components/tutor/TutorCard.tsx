@@ -15,7 +15,7 @@ export function TutorCard({ fen, onSelectMove }: TutorSectionProps) {
     // Trigger analysis when FEN changes
     useEffect(() => {
         if (isReady && fen) {
-            evaluatePosition(fen, 18);
+            evaluatePosition(fen, 15);
         }
     }, [fen, isReady, evaluatePosition]);
 

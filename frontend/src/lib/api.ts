@@ -104,12 +104,14 @@ export interface TutorResponse {
 export async function explainMove(
   fen: string,
   move: string,
-  best_move?: string
+  best_move?: string,
+  player_pv?: string,
+  best_pv?: string
 ): Promise<TutorResponse> {
   const res = await fetch(`${API_BASE}/tutor/explain`, {
     method: "POST",
     headers: await getAuthHeaders(),
-    body: JSON.stringify({ fen, move, best_move }),
+    body: JSON.stringify({ fen, move, best_move, player_pv, best_pv }),
   });
   if (!res.ok) {
     throw new Error("Failed to get explanation");

@@ -220,7 +220,9 @@ async def explain_move(
     explanation = await tutor_service.explain_move(
         fen=request.fen,
         move_uci=request.move,
-        best_move_uci=request.best_move
+        best_move_uci=request.best_move,
+        player_pv=request.player_pv,
+        best_pv=request.best_pv
     )
     return TutorResponse(explanation=explanation)
 

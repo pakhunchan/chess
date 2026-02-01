@@ -79,6 +79,8 @@ class TutorRequest(BaseModel):
     fen: str
     move: str
     best_move: str | None = None
+    player_pv: str | None = None
+    best_pv: str | None = None
 
 
 class TutorResponse(BaseModel):

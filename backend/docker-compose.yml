@@ -6,6 +6,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://chess:chess@db:5432/chess
       - FIREBASE_SERVICE_ACCOUNT_KEY=/app/firebase-service-account.json
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
     volumes:
       - ./app:/app/app
       - ./firebase-service-account.json:/app/firebase-service-account.json:ro

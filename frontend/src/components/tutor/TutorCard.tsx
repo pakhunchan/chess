@@ -20,10 +20,9 @@ export function TutorCard({ fen, onSelectMove, orientation = "white" }: TutorCar
 
         setIsExplaining(true);
         try {
-            // Identify the user's intended move or the best move
-            // For now, let's explain the "Best Move" generally, or if user clicked something...
-            // Actually, the button says "Explain These Moves", implying the context of the recommendation.
-            const res = await import('../../lib/api').then(m => m.explainMove(fen, bestMove.uci, aggressiveMove?.uci));
+            // We pass the "Best Move" as the user's intended move to get an explanation of why it is good.
+            // We include the PV (line) for context. We do NOT pass aggressiveMove as a 'correction' because bestMove is already the best.
+            const res = await import('../../lib/api').then(m => m.explainMove(fen, bestMove.uci, undefined, bestMove.pv));
             setExplanation(res.explanation);
         } catch (e) {
             console.error(e);

@@ -196,26 +196,36 @@ export default function Game() {
     : game.current_position;
 
   return (
-    <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-start pt-12 p-8 text-white">
-      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+    <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-start p-4 text-white relative">
 
-        {/* Left Col: Board */}
-        <div className="lg:col-span-2 flex justify-center">
-          {game && (
-            <ChessBoard
-              position={displayPosition}
-              onMove={handleMove}
-              onPromotionNeeded={handlePromotionNeeded}
-              disabled={game.status === "finished"}
-              highlightSquares={lastMove}
-              premoveQueue={premoveQueue}
-              onPremoveCancel={cancelPremoves}
-            />
-          )}
+      {/* Top Right Actions */}
+      <div className="absolute top-4 right-4 z-10">
+        <Button variant="outline" size="sm" onClick={() => navigate("/")} className="gap-2">
+          Leave Game
+        </Button>
+      </div>
+
+      <div className="w-full max-w-[95%] grid grid-cols-1 lg:grid-cols-3 gap-4 items-start h-full">
+
+        {/* Left Col: Board (92vh) */}
+        <div className="lg:col-span-2 flex justify-center items-center h-[92vh]">
+          <div className="w-full h-full max-w-[92vh] aspect-square">
+            {game && (
+              <ChessBoard
+                position={displayPosition}
+                onMove={handleMove}
+                onPromotionNeeded={handlePromotionNeeded}
+                disabled={game.status === "finished"}
+                highlightSquares={lastMove}
+                premoveQueue={premoveQueue}
+                onPremoveCancel={cancelPremoves}
+              />
+            )}
+          </div>
         </div>
 
         {/* Right Col: Info & Tutor */}
-        <div className="space-y-6">
+        <div className="space-y-6 pt-12 lg:pt-0">
           {/* AI Tutor */}
           {game && (
             <TutorCard
@@ -225,13 +235,12 @@ export default function Game() {
             />
           )}
 
-          {/* Quick Actions (Minimal) */}
-          <div className="flex gap-2 justify-end">
-            <Button variant="outline" size="sm" onClick={() => navigate("/")}>Quit</Button>
-            {game && game.status === "finished" && (
+          {/* New Game Button (Only when finished) */}
+          {game && game.status === "finished" && (
+            <div className="flex justify-end">
               <Button size="sm" onClick={() => navigate("/")}>New Game</Button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 

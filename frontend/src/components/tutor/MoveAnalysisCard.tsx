@@ -113,39 +113,43 @@ export function MoveAnalysisCard({ fen, move, rank, bestMove, alternative, autoE
                 {move.pv}
             </div>
 
-            {/* Explanation Area */}
-            {explanation ? (
-                <div className="bg-black/30 rounded p-3 mb-3 border border-white/5" onClick={(e) => e.stopPropagation()}>
-                    <p className="text-sm text-gray-300 leading-relaxed animate-in fade-in duration-500">
-                        {explanation}
-                    </p>
-                </div>
-            ) : null}
-
-            {/* Action Button */}
-            {!explanation && (
-                <button
-                    onClick={handleExplain}
-                    disabled={isExplaining || isAnalyzing}
-                    className={`w-full py-2 rounded-md text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${isExplaining
-                        ? 'bg-neutral-800 text-neutral-500 cursor-wait'
-                        : isRank1
-                            ? 'bg-indigo-600 hover:bg-indigo-500 text-white'
-                            : 'bg-neutral-700 hover:bg-neutral-600 text-neutral-200'
-                        }`}
-                >
-                    {isExplaining ? (
-                        <>
-                            <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                            Asking Gemini...
-                        </>
-                    ) : (
-                        <>
-                            <span>✨ Explain This Move</span>
-                        </>
-                    )}
-                </button>
-            )}
+            {/* Explanation Area - Fixed Height to prevent jumping */}
+            <div className="min-h-[140px] flex flex-col justify-end">
+                {explanation ? (
+                    <div className="bg-black/30 rounded p-3 mb-3 border border-white/5" onClick={(e) => e.stopPropagation()}>
+                        <p className="text-sm text-gray-300 leading-relaxed animate-in fade-in duration-500">
+                            {explanation}
+                        </p>
+                    </div>
+                ) : (
+                    // Placeholder space or "Ask Gemini" button
+                    <div className="h-full flex items-end">
+                        {!explanation && (
+                            <button
+                                onClick={handleExplain}
+                                disabled={isExplaining || isAnalyzing}
+                                className={`w-full py-2 rounded-md text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${isExplaining
+                                    ? 'bg-neutral-800 text-neutral-500 cursor-wait'
+                                    : isRank1
+                                        ? 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                                        : 'bg-neutral-700 hover:bg-neutral-600 text-neutral-200'
+                                    }`}
+                            >
+                                {isExplaining ? (
+                                    <>
+                                        <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                        Asking Gemini...
+                                    </>
+                                ) : (
+                                    <>
+                                        <span>✨ Explain This Move</span>
+                                    </>
+                                )}
+                            </button>
+                        )}
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

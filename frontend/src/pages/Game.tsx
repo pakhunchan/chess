@@ -4,9 +4,9 @@ import { Chess, type Move as ChessMove } from "chess.js";
 import { Button } from "@/components/ui/button";
 import ChessBoard from "@/components/chess/ChessBoard";
 import PromotionModal from "@/components/chess/PromotionModal";
-import { getCapturedPieces, getPlayerNetScore, CapturedPiecesColumn } from "@/components/chess/CapturedPieces";
-import { getGame, makeMove, DIFFICULTY_LABELS, type GameResponse } from "@/lib/api";
+import { getGame, makeMove, type GameResponse } from "@/lib/api";
 import { usePremove } from "@/hooks/usePremove";
+import { TutorCard } from "@/components/tutor/TutorCard";
 
 export default function Game() {
   const { gameId } = useParams<{ gameId: string }>();
@@ -196,58 +196,54 @@ export default function Game() {
     : game.current_position;
 
   return (
-    <div className="min-h-screen flex flex-col items-center p-8 gap-6">
-      <div className="flex items-center justify-between w-full max-w-[600px]">
-        <Button variant="ghost" onClick={() => navigate("/")}>
-          ← Back
-        </Button>
-        <div className="text-center">
-          <h1 className="text-2xl font-bold">Computer</h1>
-          <p className="text-sm text-muted-foreground">
-            {DIFFICULTY_LABELS[game.difficulty]}
-          </p>
+    <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-start pt-12 p-8 text-white">
+      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+
+        {/* Left Col: Board */}
+        <div className="lg:col-span-2 flex justify-center">
+          {game && (
+            <ChessBoard
+              position={displayPosition}
+              onMove={handleMove}
+              onPromotionNeeded={handlePromotionNeeded}
+              disabled={game.status === "finished"}
+              highlightSquares={lastMove}
+              premoveQueue={premoveQueue}
+              onPremoveCancel={cancelPremoves}
+            />
+          )}
         </div>
-        <div className="w-16" /> {/* Spacer for alignment */}
-      </div>
 
-      <div className="text-center">
-        <p className="text-lg font-medium">{getStatusText()}</p>
-        {moveError && <p className="text-destructive text-sm mt-1">{moveError}</p>}
-        {(() => {
-          const score = getPlayerNetScore(game.current_position);
-          if (score === 0) return null;
-          return (
-            <p className={`text-sm font-medium ${score > 0 ? "text-green-600" : "text-red-500"}`}>
-              {score > 0 ? `+${score}` : score}
-            </p>
-          );
-        })()}
-      </div>
+        {/* Right Col: Info & Tutor */}
+        <div className="space-y-6">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6">
+            <h1 className="text-2xl font-bold text-white mb-2">Game Room</h1>
+            <p className="text-neutral-400 font-mono text-sm mb-4">ID: {gameId}</p>
 
-      <div className="flex items-center gap-4">
-        <CapturedPiecesColumn
-          pieces={getCapturedPieces(game.current_position).capturedBlack}
-          color="dark"
-        />
-        <ChessBoard
-          position={displayPosition}
-          onMove={handleMove}
-          onPromotionNeeded={handlePromotionNeeded}
-          // Disabled if finished. NOT disabled if black's turn (to allow premoves)
-          disabled={game.status === "finished"}
-          highlightSquares={lastMove}
-          premoveQueue={premoveQueue}
-          onPremoveCancel={cancelPremoves}
-        />
-        <CapturedPiecesColumn
-          pieces={getCapturedPieces(game.current_position).capturedWhite}
-          color="light"
-        />
-      </div>
+            <div className="mb-4">
+              {getStatusText()}
+            </div>
 
-      {game.status === "finished" && (
-        <Button onClick={() => navigate("/")}>New Game</Button>
-      )}
+            {/* Moves List Placeholder (or Captured) */}
+
+            {/* Actions */}
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => navigate("/")}>Quit</Button>
+              {game.status === "finished" && (
+                <Button onClick={() => navigate("/")}>New Game</Button>
+              )}
+            </div>
+          </div>
+
+          {/* AI Tutor */}
+          {game && (
+            <TutorCard
+              fen={displayPosition}
+              onSelectMove={(move) => handleMove(move.from, move.to)}
+            />
+          )}
+        </div>
+      </div>
 
       {pendingPromotion && (
         <PromotionModal onSelect={handlePromotionSelect} />

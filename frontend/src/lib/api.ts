@@ -96,3 +96,23 @@ export async function registerUser(username: string): Promise<{ status: string; 
   }
   return res.json();
 }
+
+export interface TutorResponse {
+  explanation: string;
+}
+
+export async function explainMove(
+  fen: string,
+  move: string,
+  best_move?: string
+): Promise<TutorResponse> {
+  const res = await fetch(`${API_BASE}/tutor/explain`, {
+    method: "POST",
+    headers: await getAuthHeaders(),
+    body: JSON.stringify({ fen, move, best_move }),
+  });
+  if (!res.ok) {
+    throw new Error("Failed to get explanation");
+  }
+  return res.json();
+}

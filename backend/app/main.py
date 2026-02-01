@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from .database import get_db, engine, Base
 from .models import Game, Move, User
-from .schemas import CreateGameRequest, GameResponse, MoveRequest, MoveResponse, MoveInfo, UserResponse, GameSummary, UserGamesResponse
+from .schemas import CreateGameRequest, GameResponse, MoveRequest, MoveResponse, MoveInfo, UserResponse, GameSummary, UserGamesResponse, TutorRequest, TutorResponse
 from .services.chess_service import ChessService, STARTING_FEN
 from .services.ai_service import StockfishAI
 from .dependencies import get_current_user_optional, get_current_user_required
@@ -208,3 +208,19 @@ def get_current_user_games(
     ]
 
     return UserGamesResponse(games=game_summaries)
+
+
+@app.post("/tutor/explain", response_model=TutorResponse)
+async def explain_move(
+    request: TutorRequest,
+    current_user: User | None = Depends(get_current_user_optional),  # Optional: rate limit based on user?
+):
+    from .services.tutor import tutor_service
+    
+    explanation = await tutor_service.explain_move(
+        fen=request.fen,
+        move_uci=request.move,
+        best_move_uci=request.best_move
+    )
+    return TutorResponse(explanation=explanation)
+

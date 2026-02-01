@@ -70,5 +70,17 @@ class GameSummary(BaseModel):
         from_attributes = True
 
 
+
 class UserGamesResponse(BaseModel):
     games: list[GameSummary]
+
+
+class TutorRequest(BaseModel):
+    fen: str
+    move: str
+    best_move: str | None = None
+
+
+class TutorResponse(BaseModel):
+    explanation: str
+

@@ -79,7 +79,8 @@ export async function makeMove(
     const error = await res.json();
     throw new Error(error.detail || "Invalid move");
   }
-  return res.json();
+  const data = await res.json();
+  return data;
 }
 
 

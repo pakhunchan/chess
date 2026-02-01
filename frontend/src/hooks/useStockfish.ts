@@ -11,6 +11,7 @@ export interface StockfishLine {
 
 export function useStockfish() {
     const workerRef = useRef<Worker | null>(null);
+    const shouldIgnoreMessages = useRef(false);
     const [isReady, setIsReady] = useState(false);
     const [lines, setLines] = useState<StockfishLine[]>([]);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -25,6 +26,9 @@ export function useStockfish() {
         };
 
         worker.onmessage = (e) => {
+            // STRICT GUARD: If we requested a stop, ignore any trailing messages to prevent UI flicker
+            if (shouldIgnoreMessages.current) return;
+
             const msg = e.data;
             if (msg === "uciok") {
                 setIsReady(true);
@@ -82,6 +86,7 @@ export function useStockfish() {
     const evaluatePosition = useCallback((fen: string, depth: number = 15) => {
         if (!workerRef.current) return;
 
+        shouldIgnoreMessages.current = false; // Unblock messages for new analysis
         setIsAnalyzing(true);
         setLines([]); // Clear previous
         workerRef.current.postMessage("stop");
@@ -89,5 +94,12 @@ export function useStockfish() {
         workerRef.current.postMessage(`go depth ${depth}`);
     }, []);
 
-    return { isReady, lines, isAnalyzing, evaluatePosition };
+    const stopAnalysis = useCallback(() => {
+        if (!workerRef.current) return;
+        shouldIgnoreMessages.current = true; // Block incoming messages immediately
+        workerRef.current.postMessage("stop");
+        setIsAnalyzing(false); // Immediate feedback
+    }, []);
+
+    return { isReady, lines, isAnalyzing, evaluatePosition, stopAnalysis };
 }

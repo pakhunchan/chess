@@ -9,7 +9,7 @@ interface TutorCardProps {
 }
 
 export function TutorCard({ fen, onSelectMove, orientation = "white" }: TutorCardProps) {
-    const { isReady, lines, isAnalyzing, evaluatePosition } = useStockfish();
+    const { isReady, lines, isAnalyzing, evaluatePosition, stopAnalysis } = useStockfish();
     const [bestMove, setBestMove] = useState<StockfishLine | null>(null);
     const [aggressiveMove, setAggressiveMove] = useState<StockfishLine | null>(null);
     const [explanation, setExplanation] = useState<string | null>(null);
@@ -18,6 +18,8 @@ export function TutorCard({ fen, onSelectMove, orientation = "white" }: TutorCar
     async function handleExplain() {
         if (!bestMove || !fen) return;
 
+        // FREEZE! Stop analysis so the user gets an explanation for what they are currently looking at.
+        stopAnalysis();
         setIsExplaining(true);
         try {
             // We pass the "Best Move" as the user's intended move to get an explanation of why it is good.

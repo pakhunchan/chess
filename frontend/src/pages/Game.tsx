@@ -205,11 +205,16 @@ export default function Game() {
         </Button>
       </div>
 
-      <div className="w-full max-w-[95%] grid grid-cols-1 lg:grid-cols-3 gap-4 items-start h-full">
+      <div className="w-full max-w-full flex flex-col lg:flex-row gap-4 lg:gap-8 items-center justify-center h-full px-4">
 
-        {/* Left Col: Board (92vh) */}
-        <div className="lg:col-span-2 flex justify-center items-center h-[92vh]">
-          <div className="w-full h-full max-w-[92vh] aspect-square">
+        {/* Board Area: Flex-1 to take available width, formatted to stay square */}
+        <div className="flex-1 flex justify-center items-center h-[92vh]">
+          {/* 
+              Constrain by Height (92vh) primarily. 
+              But also ensure it doesn't overflow width (max-w-full).
+              aspect-square ensures proper shape.
+          */}
+          <div className="h-[92vh] aspect-square max-w-full relative">
             {game && (
               <ChessBoard
                 position={displayPosition}
@@ -224,8 +229,8 @@ export default function Game() {
           </div>
         </div>
 
-        {/* Right Col: Info & Tutor */}
-        <div className="space-y-6 pt-12 lg:pt-0">
+        {/* Right Col: Info & Tutor - Fixed Width on Desktop */}
+        <div className="w-full lg:w-[400px] flex-shrink-0 space-y-6 pt-0">
           {/* AI Tutor */}
           {game && (
             <TutorCard

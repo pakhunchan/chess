@@ -191,7 +191,7 @@ export default function ChessBoard({
 
   return (
     <div
-      className="w-full max-w-[600px] overflow-hidden rounded-md shadow-xl bg-neutral-900 leading-none text-[0px]"
+      className="w-full h-full overflow-hidden rounded-md shadow-xl bg-neutral-900 leading-none text-[0px]"
       onContextMenu={(e) => {
         e.preventDefault();
         onPremoveCancel?.();
@@ -199,17 +199,15 @@ export default function ChessBoard({
         setOptionSquares({});
       }}
     >
-      <div style={{ width: '100%', height: '100%', display: 'flex' }}>
+      <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         <Chessboard
-          options={{
-            position,
-            onPieceDrop: handlePieceDrop,
-            onSquareClick: onSquareClick,
-            arePiecesDraggable: !disabled,
-            boardOrientation: "white",
-            squareStyles,
-            boardWidth: 600,
-          }}
+          id="BasicBoard"
+          position={position}
+          onPieceDrop={handlePieceDrop}
+          onSquareClick={onSquareClick}
+          arePiecesDraggable={!disabled}
+          boardOrientation="white"
+          customSquareStyles={squareStyles}
         />
       </div>
     </div>

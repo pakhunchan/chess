@@ -21,38 +21,50 @@ class TutorService:
         if not hasattr(self, 'model'):
              return "AI Tutor is not configured (Missing API Key)."
 
-        prompt = f"""
-        You are a helpful Chess Grandmaster Tutor.
-        The current board FEN is: {fen}
+        import chess
+        board = chess.Board(fen)
+        turn = "White" if board.turn == chess.WHITE else "Black"
         
-        The user wants to make the move: {move_uci}.
+        prompt = f"""
+        You are a concise Chess Tutor.
+        The current board FEN is: {fen}
+        It is {turn}'s turn.
+        
+        The move to analyze is: {move_uci}.
         """
         
         if player_pv:
-            prompt += f"The projected continuation for this move is: {player_pv}.\n"
+            prompt += f"Projected line: {player_pv}.\n"
 
         if best_move_uci and best_move_uci != move_uci:
-            prompt += f"\nHowever, the engine recommends: {best_move_uci} (Best Move).\n"
+            prompt += f"\nNote: The engine prefers {best_move_uci} (Best).\n"
             if best_pv:
-                 prompt += f"The engine foresees the line: {best_pv}.\n"
+                 prompt += f"Engine line: {best_pv}.\n"
 
         if alternative_move:
-             prompt += f"\nAnother strong option is: {alternative_move} (Alternative).\n"
+             prompt += f"\nNote: Another option is {alternative_move} (Alternative).\n"
              if alternative_pv:
-                  prompt += f"Line: {alternative_pv}.\n"
+                  prompt += f"Alt line: {alternative_pv}.\n"
         
-        prompt += """
-        Explain the strategic purpose of the best move (and the alternative if provided) in 2-3 concise sentences.
-        Briefly compare why the Best Move is preferred over the Alternative (or the user's move).
-        Focus on key concepts like controlling the center, developing pieces, or tactical threats.
-        Do not use markdown formatting like bold or italics. Keep it simple text.
+        prompt += f"""
+        Explain the strategic purpose of {move_uci} for {turn} in simple text.
+        If there is a better move mentioned, briefly explain why {move_uci} is inferior or superior in comparison.
+        
+        CRITICAL INSTRUCTIONS:
+        1. Response MUST be under 50 words.
+        2. Do NOT mention moves that belong to the opponent as if the user is playing them.
+        3. Do NOT use markdown.
+        4. Focus on ONE key idea (e.g. controlling center, safety, tactics).
         """
 
         try:
             response = await self.model.generate_content_async(prompt)
             return response.text
         except Exception as e:
-            print(f"Gemini API Error: {e}")
+            error_str = str(e)
+            print(f"Gemini API Error: {error_str}")
+            if "429" in error_str:
+                return "📉 Usage limit reached. Please wait a minute before asking again."
             return "I couldn't generate an explanation right now."
 
 tutor_service = TutorService()

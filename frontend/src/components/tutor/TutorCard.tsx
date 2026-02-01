@@ -35,8 +35,8 @@ export function TutorCard({ fen, onSelectMove }: TutorSectionProps) {
                     <button
                         onClick={() => setAutoExplain(!autoExplain)}
                         className={`group flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${autoExplain
-                                ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/20'
-                                : 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:text-neutral-300'
+                            ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/20'
+                            : 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:text-neutral-300'
                             }`}
                         title="Automatically request explanations for both moves"
                     >
@@ -73,8 +73,13 @@ export function TutorCard({ fen, onSelectMove }: TutorSectionProps) {
                         move={bestMove}
                         rank={1}
                         bestMove={bestMove}
+                        alternative={alternativeMove} // Provide alternative comparison for Best Move
                         autoExplain={autoExplain}
                         isAnalyzing={isAnalyzing}
+                        onSelect={() => onSelectMove?.({
+                            from: bestMove.uci.slice(0, 2),
+                            to: bestMove.uci.slice(2, 4)
+                        })}
                     />
                 )}
 
@@ -87,6 +92,10 @@ export function TutorCard({ fen, onSelectMove }: TutorSectionProps) {
                         bestMove={bestMove}
                         autoExplain={autoExplain}
                         isAnalyzing={isAnalyzing}
+                        onSelect={() => onSelectMove?.({
+                            from: alternativeMove.uci.slice(0, 2),
+                            to: alternativeMove.uci.slice(2, 4)
+                        })}
                     />
                 )}
             </div>

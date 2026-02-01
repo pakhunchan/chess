@@ -7,12 +7,14 @@ interface MoveAnalysisCardProps {
     move: StockfishLine;
     rank: number;
     bestMove: StockfishLine;
+    alternative?: StockfishLine; // Added optional alternative context
     autoExplain: boolean;
     isAnalyzing: boolean;
     onExplainRequest?: () => void;
+    onSelect?: () => void;
 }
 
-export function MoveAnalysisCard({ fen, move, rank, bestMove, autoExplain, isAnalyzing }: MoveAnalysisCardProps) {
+export function MoveAnalysisCard({ fen, move, rank, bestMove, alternative, autoExplain, isAnalyzing, onSelect }: MoveAnalysisCardProps) {
     const [explanation, setExplanation] = useState<string | null>(null);
     const [isExplaining, setIsExplaining] = useState(false);
 
@@ -44,16 +46,25 @@ export function MoveAnalysisCard({ fen, move, rank, bestMove, autoExplain, isAna
     }, [fen, move.uci]);
 
     // Independent Explain Handler
-    async function handleExplain() {
+    async function handleExplain(e?: React.MouseEvent) {
+        if (e) e.stopPropagation(); // Prevent card click
         if (!fen) return;
         setIsExplaining(true);
         try {
+            // Logic:
+            // If Rank 1 (Best Move): We want to compare it against the Alternative.
+            //    move=Best, best=Best, alternate=Alt
+            // If Rank 2 (Alt Move): We want to compare it against the Best.
+            //    move=Alt, best=Best, alternate=undefined (because 'move' IS the alt focus)
+
             const res = await import('../../lib/api').then(m => m.explainMove(
                 fen,
                 move.uci,      // "User's Move" -> The move this card is about
                 bestMove.uci,  // "Best Context" -> Always the rank 1 move
                 move.pv,       // PV for this move
-                bestMove.pv    // PV for best move context
+                bestMove.pv,    // PV for best move context
+                alternative?.uci, // Pass alternative context if provided (for top card)
+                alternative?.pv
             ));
 
             setExplanation(res.explanation);
@@ -75,7 +86,10 @@ export function MoveAnalysisCard({ fen, move, rank, bestMove, autoExplain, isAna
     const bgClass = isRank1 ? 'bg-gradient-to-br from-indigo-900/40 to-indigo-900/10 border-indigo-500/30' : 'bg-neutral-800/80 border-neutral-700';
 
     return (
-        <div className={`group relative overflow-hidden border rounded-lg p-4 transition-all ${bgClass}`}>
+        <div
+            onClick={onSelect}
+            className={`group relative overflow-hidden border rounded-lg p-4 transition-all cursor-pointer hover:border-indigo-400/50 ${bgClass}`}
+        >
 
             {/* Header / Move Info */}
             <div className="flex justify-between items-start mb-3">
@@ -101,7 +115,7 @@ export function MoveAnalysisCard({ fen, move, rank, bestMove, autoExplain, isAna
 
             {/* Explanation Area */}
             {explanation ? (
-                <div className="bg-black/30 rounded p-3 mb-3 border border-white/5">
+                <div className="bg-black/30 rounded p-3 mb-3 border border-white/5" onClick={(e) => e.stopPropagation()}>
                     <p className="text-sm text-gray-300 leading-relaxed animate-in fade-in duration-500">
                         {explanation}
                     </p>
@@ -114,10 +128,10 @@ export function MoveAnalysisCard({ fen, move, rank, bestMove, autoExplain, isAna
                     onClick={handleExplain}
                     disabled={isExplaining || isAnalyzing}
                     className={`w-full py-2 rounded-md text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${isExplaining
-                            ? 'bg-neutral-800 text-neutral-500 cursor-wait'
-                            : isRank1
-                                ? 'bg-indigo-600 hover:bg-indigo-500 text-white'
-                                : 'bg-neutral-700 hover:bg-neutral-600 text-neutral-200'
+                        ? 'bg-neutral-800 text-neutral-500 cursor-wait'
+                        : isRank1
+                            ? 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                            : 'bg-neutral-700 hover:bg-neutral-600 text-neutral-200'
                         }`}
                 >
                     {isExplaining ? (

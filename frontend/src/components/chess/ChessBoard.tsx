@@ -1,5 +1,6 @@
 import { Chessboard } from "react-chessboard";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { Chess } from "chess.js";
 
 interface ChessBoardProps {
   position: string;
@@ -11,14 +12,6 @@ interface ChessBoardProps {
   onPremoveCancel?: () => void;
 }
 
-interface PieceDropArgs {
-  piece: {
-    pieceType: string;
-  };
-  sourceSquare: string;
-  targetSquare: string | null;
-}
-
 export default function ChessBoard({
   position,
   onMove,
@@ -28,30 +21,124 @@ export default function ChessBoard({
   premoveQueue = [],
   onPremoveCancel
 }: ChessBoardProps) {
+  const [moveFrom, setMoveFrom] = useState<string | null>(null);
+  const [optionSquares, setOptionSquares] = useState<Record<string, React.CSSProperties>>({});
+
+  function getMoveOptions(square: string) {
+    const chess = new Chess(position);
+    const moves = chess.moves({
+      square,
+      verbose: true,
+    });
+
+
+    // If no moves found, check if we can force a turn (for premoves)
+    if (moves.length === 0 && !disabled) {
+      // Force White Turn Logic (Simple localized version)
+      // We assume the user is always White in this context based on 'boardOrientation="white"'
+      const tokens = position.split(" ");
+      if (tokens[1] === "b") {
+        tokens[1] = "w";
+        tokens[3] = "-"; // Clear en passant to avoid invalid FEN if inconsistent
+        const forcedFen = tokens.join(" ");
+        try {
+          const forcedMoves = new Chess(forcedFen).moves({
+            square,
+            verbose: true
+          });
+          return forcedMoves;
+        } catch (e) {
+          console.error("Forced move calc error:", e);
+          return [];
+        }
+      }
+    }
+    return moves;
+  }
+
+  function onSquareClick(args: any) { // actually SquareHandlerArgs or string depending on version, safely handle both
+    const square = typeof args === 'string' ? args : args.square;
+
+    setOptionSquares({});
+
+    // 1. Unselect if clicking same square
+    if (moveFrom === square) {
+      setMoveFrom(null);
+      return;
+    }
+
+    // 2. If we have a pending source, check if this is a valid move target
+    if (moveFrom) {
+      // Get valid moves from source
+      const moves = getMoveOptions(moveFrom);
+      const foundMove = moves.find((m: any) => m.from === moveFrom && m.to === square);
+
+      // If valid move found
+      if (foundMove) {
+        // Check for promotion
+        const isPromotion = foundMove.flags.includes("p") || foundMove.promotion; // chess.js flag 'p' OR manual check
+        // Simple visual chcek for pawn reaching rank 1/8
+        // But strict structured check:
+        if ((foundMove.piece === "p" && (foundMove.to[1] === "8" || foundMove.to[1] === "1"))) {
+          onPromotionNeeded?.(moveFrom, square);
+          setMoveFrom(null);
+          return;
+        }
+
+        const result = onMove(moveFrom, square, foundMove.promotion);
+        setMoveFrom(null);
+        return;
+      }
+    }
+
+    // 3. Select new piece (if it has moves)
+    const newMoves = getMoveOptions(square);
+    if (newMoves.length === 0) {
+      setMoveFrom(null);
+      return;
+    }
+
+    setMoveFrom(square);
+
+    // Highlight options
+    const newOptions: Record<string, React.CSSProperties> = {};
+    newMoves.forEach((move: any) => {
+      newOptions[move.to] = {
+        background:
+          new Chess(position).get(move.to) && new Chess(position).get(move.to).color !== new Chess(position).get(square).color
+            ? "radial-gradient(circle, rgba(0,0,0,.1) 85%, transparent 85%)"
+            : "radial-gradient(circle, rgba(0,0,0,.15) 25%, transparent 25%)",
+        borderRadius: "50%",
+      };
+    });
+    // Highlight source
+    newOptions[square] = {
+      background: "rgba(255, 255, 0, 0.4)",
+    };
+    setOptionSquares(newOptions);
+  }
+
   const handlePieceDrop = (arg1: any, arg2?: any, arg3?: any): boolean => {
-    console.log("handlePieceDrop called with:", arg1, arg2, arg3);
     let sourceSquare: string;
     let targetSquare: string;
     let piece: any;
 
-    // Detect if arg1 is an object (Legacy/Options signature?)
     if (typeof arg1 === 'object' && arg1.sourceSquare && arg1.targetSquare) {
       sourceSquare = arg1.sourceSquare;
       targetSquare = arg1.targetSquare;
       piece = arg1.piece;
     } else {
-      // Standard positional signature
       sourceSquare = arg1;
       targetSquare = arg2;
       piece = arg3;
     }
-    console.log("Parsed drop:", { sourceSquare, targetSquare, piece });
 
     if (!targetSquare) return false;
 
-    // Normalize piece string
+    // Normalization
     const pieceStr = typeof piece === 'string' ? piece : piece?.pieceType || "";
 
+    // Promotion check (Drag Logic)
     const isPromotion =
       pieceStr[1] === "P" &&
       ((pieceStr[0] === "w" && targetSquare[1] === "8") ||
@@ -59,10 +146,17 @@ export default function ChessBoard({
 
     if (isPromotion && onPromotionNeeded) {
       onPromotionNeeded(sourceSquare, targetSquare);
+      // Clean up click state if any
+      setMoveFrom(null);
+      setOptionSquares({});
       return false;
     }
 
     const result = onMove(sourceSquare, targetSquare);
+
+    // Clean up click state logic
+    setMoveFrom(null);
+    setOptionSquares({});
 
     if (result instanceof Promise) {
       result.catch(console.error);
@@ -73,26 +167,27 @@ export default function ChessBoard({
   };
 
   const squareStyles = useMemo(() => {
-    const styles: Record<string, React.CSSProperties> = {};
+    const styles: Record<string, React.CSSProperties> = {
+      ...optionSquares // Merge click options
+    };
 
-    // Standard last move highlight (Yellow)
+    // Standard last move highlight (Yellow) if not overridden
     if (highlightSquares) {
-      styles[highlightSquares.from] = { backgroundColor: "rgba(255, 255, 0, 0.4)" };
-      styles[highlightSquares.to] = { backgroundColor: "rgba(255, 255, 0, 0.4)" };
+      styles[highlightSquares.from] = { backgroundColor: "rgba(255, 255, 0, 0.4)", ...styles[highlightSquares.from] };
+      styles[highlightSquares.to] = { backgroundColor: "rgba(255, 255, 0, 0.4)", ...styles[highlightSquares.to] };
     }
 
-    // Premove highlights (Red)
+    // Premove highlights (Red) - Highest priority?
     premoveQueue.forEach((move, index) => {
-      // Opacity increases with queue depth, maxing out at 0.6
       const opacity = Math.min(0.2 + index * 0.1, 0.6);
       const color = `rgba(235, 97, 80, ${opacity})`;
 
-      styles[move.from] = { backgroundColor: color };
-      styles[move.to] = { backgroundColor: color };
+      styles[move.from] = { backgroundColor: color, ...styles[move.from] };
+      styles[move.to] = { backgroundColor: color, ...styles[move.to] };
     });
 
     return styles;
-  }, [highlightSquares, premoveQueue]);
+  }, [highlightSquares, premoveQueue, optionSquares]);
 
   return (
     <div
@@ -100,17 +195,18 @@ export default function ChessBoard({
       onContextMenu={(e) => {
         e.preventDefault();
         onPremoveCancel?.();
+        setMoveFrom(null);
+        setOptionSquares({});
       }}
     >
       <Chessboard
         options={{
           position,
           onPieceDrop: handlePieceDrop,
+          onSquareClick: onSquareClick,
           arePiecesDraggable: !disabled,
           boardOrientation: "white",
-          squareStyles, // Note: The prop is likely squareStyles in this version if it follows v4 pattern, or customSquareStyles?
-          // Given it uses 'options', it likely mirrors standard props inside.
-          // The User's previous code used 'squareStyles'. I will stick to that.
+          squareStyles,
           boardWidth: 600,
         }}
       />

@@ -4,25 +4,29 @@ import { Chess } from 'chess.js';
 
 interface MoveAnalysisCardProps {
     fen: string;
-    move: StockfishLine;
+    move: StockfishLine | null;
     rank: number;
-    bestMove: StockfishLine;
+    bestMove: StockfishLine | null;
     alternative?: StockfishLine; // Added optional alternative context
     autoExplain: boolean;
     isAnalyzing: boolean;
     onExplainRequest?: () => void;
     onSelect?: () => void;
+    onHover?: (isHovering: boolean) => void;
 }
 
-export function MoveAnalysisCard({ fen, move, rank, bestMove, alternative, autoExplain, isAnalyzing, onSelect }: MoveAnalysisCardProps) {
+export function MoveAnalysisCard({ fen, move, rank, bestMove, alternative, autoExplain, isAnalyzing, onSelect, onHover }: MoveAnalysisCardProps) {
     const [explanation, setExplanation] = useState<string | null>(null);
     const [isExplaining, setIsExplaining] = useState(false);
+
+    const [isDismissed, setIsDismissed] = useState(false);
 
     // Derived state for display
     const [displayInfo, setDisplayInfo] = useState<{ san: string, score: string }>({ san: '...', score: '...' });
 
     // Process move notation (SAN) and score
     useEffect(() => {
+        if (!move) return;
         try {
             const chess = new Chess(fen);
             const m = chess.move({
@@ -30,11 +34,15 @@ export function MoveAnalysisCard({ fen, move, rank, bestMove, alternative, autoE
                 to: move.uci.slice(2, 4),
                 promotion: move.uci.length > 4 ? move.uci.slice(4) as any : undefined
             });
-            const evalScore = (move.score / 100).toFixed(2);
-            setDisplayInfo({
-                san: m.san,
-                score: move.score > 0 ? `+${evalScore}` : evalScore
-            });
+            if (move.mate !== undefined) {
+                setDisplayInfo({ san: m.san, score: `Mate in ${move.mate}` });
+            } else {
+                const evalScore = (move.score / 100).toFixed(2);
+                setDisplayInfo({
+                    san: m.san,
+                    score: move.score > 0 ? `+${evalScore}` : evalScore
+                });
+            }
         } catch (e) {
             setDisplayInfo({ san: move.uci, score: '...' });
         }
@@ -42,28 +50,23 @@ export function MoveAnalysisCard({ fen, move, rank, bestMove, alternative, autoE
 
     // Reset explanation when FEN changes (new move)
     useEffect(() => {
+        if (!move) return;
         setExplanation(null);
-    }, [fen, move.uci]);
+    }, [fen, move?.uci]);
 
     // Independent Explain Handler
     async function handleExplain(e?: React.MouseEvent) {
         if (e) e.stopPropagation(); // Prevent card click
-        if (!fen) return;
+        if (!fen || !move || !bestMove) return;
         setIsExplaining(true);
         try {
-            // Logic:
-            // If Rank 1 (Best Move): We want to compare it against the Alternative.
-            //    move=Best, best=Best, alternate=Alt
-            // If Rank 2 (Alt Move): We want to compare it against the Best.
-            //    move=Alt, best=Best, alternate=undefined (because 'move' IS the alt focus)
-
             const res = await import('../../lib/api').then(m => m.explainMove(
                 fen,
-                move.uci,      // "User's Move" -> The move this card is about
-                bestMove.uci,  // "Best Context" -> Always the rank 1 move
-                move.pv,       // PV for this move
-                bestMove.pv,    // PV for best move context
-                alternative?.uci, // Pass alternative context if provided (for top card)
+                move.uci,
+                bestMove.uci,
+                move.pv,
+                bestMove.pv,
+                alternative?.uci,
                 alternative?.pv
             ));
 
@@ -77,17 +80,33 @@ export function MoveAnalysisCard({ fen, move, rank, bestMove, alternative, autoE
 
     // Auto-Explain Logic
     useEffect(() => {
-        if (autoExplain && !explanation && !isExplaining && isAnalyzing && move.depth >= 15) {
+        if (move && autoExplain && !explanation && !isExplaining && isAnalyzing && move.depth >= 15) {
             handleExplain();
         }
-    }, [autoExplain, explanation, isExplaining, isAnalyzing, move.depth]);
+    }, [autoExplain, explanation, isExplaining, isAnalyzing, move?.depth]);
+
+    // Render nothing if no move data (BUT hooks still run)
+    if (!move) return null;
 
     const isRank1 = rank === 1;
     const bgClass = isRank1 ? 'bg-gradient-to-br from-indigo-900/40 to-indigo-900/10 border-indigo-500/30' : 'bg-neutral-800/80 border-neutral-700';
 
     return (
         <div
-            onClick={onSelect}
+            onClick={() => {
+                setIsDismissed(true);
+                onHover?.(false);
+                onSelect?.();
+            }}
+            onMouseEnter={() => {
+                if (!isDismissed) {
+                    onHover?.(true);
+                }
+            }}
+            onMouseLeave={() => {
+                setIsDismissed(false);
+                onHover?.(false);
+            }}
             className={`group relative overflow-hidden border rounded-lg p-4 transition-all cursor-pointer hover:border-indigo-400/50 ${bgClass}`}
         >
 
@@ -109,11 +128,23 @@ export function MoveAnalysisCard({ fen, move, rank, bestMove, alternative, autoE
             </div>
 
             {/* PV Line (Subtle) */}
-            <div className="text-xs text-neutral-500 font-mono truncate mb-4 opacity-70">
-                {move.pv}
+            {/* PV Line (Subtle) */}
+            <div className="text-xs font-mono truncate mb-4 opacity-90">
+                {move.pv.split(' ').map((m, i) => {
+                    const isWhiteTurn = new Chess(fen).turn() === 'w';
+                    // If i is even (0, 2), it's the "current" turn.
+                    // If isWhiteTurn is true, then evens are White, odds are Black.
+                    const isWhiteMove = isWhiteTurn ? (i % 2 === 0) : (i % 2 !== 0);
+
+                    return (
+                        <span key={i} className={`mr-2 ${isWhiteMove ? 'text-white' : 'text-neutral-500'}`}>
+                            {m}
+                        </span>
+                    );
+                })}
             </div>
 
-            {/* Explanation Area - Fixed Height to prevent jumping */}
+            {/* Explanation Area */}
             <div className="min-h-[140px] flex flex-col justify-end">
                 {explanation ? (
                     <div className="bg-black/30 rounded p-3 mb-3 border border-white/5" onClick={(e) => e.stopPropagation()}>
@@ -122,7 +153,6 @@ export function MoveAnalysisCard({ fen, move, rank, bestMove, alternative, autoE
                         </p>
                     </div>
                 ) : (
-                    // Placeholder space or "Ask Gemini" button
                     <div className="h-full flex items-end">
                         {!explanation && (
                             <button

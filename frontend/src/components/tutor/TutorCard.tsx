@@ -7,36 +7,47 @@ interface TutorSectionProps {
     fen: string;
     onSelectMove?: (move: { from: string, to: string }) => void;
     orientation?: "white" | "black";
+    onPreviewHover?: (pv: string | null) => void;
 }
 
-export function TutorCard({ fen, onSelectMove, orientation }: TutorSectionProps) {
+export function TutorCard({ fen, onSelectMove, orientation, onPreviewHover }: TutorSectionProps) {
     const { isReady, lines, isAnalyzing, evaluatePosition, resetAnalysis } = useStockfish();
     const [autoExplain, setAutoExplain] = useState(false);
+    const [hoveredRank, setHoveredRank] = useState<number | null>(null);
 
-    // Trigger analysis when FEN changes
     useEffect(() => {
-        if (!isReady || !fen) return;
+        if (!fen) return;
+        resetAnalysis(); // Reset state when FEN changes
+        evaluatePosition(fen, 15); // Auto-start (now optimized depth 15)
+    }, [fen, evaluatePosition, resetAnalysis]);
 
-        // If orientation is provided (e.g. "white" for user), only analyze when it's our turn
-        if (orientation) {
-            try {
-                const chess = new Chess(fen);
-                const turn = chess.turn() === 'w' ? 'white' : 'black';
-                if (turn !== orientation) {
-                    resetAnalysis();
-                    return;
-                }
-            } catch (e) {
-                console.error("Invalid FEN:", fen);
-            }
-        }
-
-        evaluatePosition(fen, 15);
-    }, [fen, isReady, evaluatePosition, orientation, resetAnalysis]);
-
-    // Derived Moves
     const bestMove = lines[0];
     const alternativeMove = lines[1];
+
+    // Conditional Preview Logic
+    useEffect(() => {
+        // If analyzing, FORCE CLEAR the preview regardless of hover
+        if (isAnalyzing) {
+            onPreviewHover?.(null);
+            return;
+        }
+
+        // Only preview if NOT analyzing and we have a hovered card
+        if (hoveredRank === 1 && bestMove) {
+            onPreviewHover?.(bestMove.pv);
+        } else if (hoveredRank === 2 && alternativeMove) {
+            onPreviewHover?.(alternativeMove.pv);
+        } else {
+            onPreviewHover?.(null);
+        }
+    }, [hoveredRank, isAnalyzing, bestMove, alternativeMove, onPreviewHover]);
+
+    // Trigger auto-explain only when best move is ready
+    useEffect(() => {
+        if (autoExplain && bestMove) {
+            // Logic handled purely in MoveAnalysisCard now
+        }
+    }, [bestMove, autoExplain]);
 
     return (
         <div className="flex flex-col gap-4 w-full max-w-md">
@@ -86,21 +97,24 @@ export function TutorCard({ fen, onSelectMove, orientation }: TutorSectionProps)
                 )}
 
                 {/* Rank 1 Card */}
-                {bestMove && (
-                    <MoveAnalysisCard
-                        fen={fen}
-                        move={bestMove}
-                        rank={1}
-                        bestMove={bestMove}
-                        alternative={alternativeMove} // Provide alternative comparison for Best Move
-                        autoExplain={autoExplain}
-                        isAnalyzing={isAnalyzing}
-                        onSelect={() => onSelectMove?.({
-                            from: bestMove.uci.slice(0, 2),
-                            to: bestMove.uci.slice(2, 4)
-                        })}
-                    />
-                )}
+                <MoveAnalysisCard
+                    fen={fen}
+                    move={bestMove || null}
+                    rank={1}
+                    bestMove={bestMove || null}
+                    alternative={alternativeMove} // Provide alternative comparison for Best Move
+                    autoExplain={autoExplain}
+                    isAnalyzing={isAnalyzing}
+                    onSelect={() => {
+                        if (bestMove) {
+                            onSelectMove?.({
+                                from: bestMove.uci.slice(0, 2),
+                                to: bestMove.uci.slice(2, 4)
+                            })
+                        }
+                    }}
+                    onHover={(hover) => setHoveredRank(hover ? 1 : null)}
+                />
 
                 {/* Rank 2 Card */}
                 {alternativeMove && (
@@ -108,13 +122,15 @@ export function TutorCard({ fen, onSelectMove, orientation }: TutorSectionProps)
                         fen={fen}
                         move={alternativeMove}
                         rank={2}
-                        bestMove={bestMove}
+                        bestMove={bestMove || null}
+                        alternative={bestMove || undefined}
                         autoExplain={autoExplain}
                         isAnalyzing={isAnalyzing}
                         onSelect={() => onSelectMove?.({
                             from: alternativeMove.uci.slice(0, 2),
                             to: alternativeMove.uci.slice(2, 4)
                         })}
+                        onHover={(hover) => setHoveredRank(hover ? 2 : null)}
                     />
                 )}
             </div>

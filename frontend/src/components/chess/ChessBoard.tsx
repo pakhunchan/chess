@@ -1,5 +1,5 @@
 import { Chessboard } from "react-chessboard";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { Chess } from "chess.js";
 
 interface ChessBoardProps {
@@ -189,8 +189,24 @@ export default function ChessBoard({
     return styles;
   }, [highlightSquares, premoveQueue, optionSquares]);
 
+  const [boardWidth, setBoardWidth] = useState(600);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const resizeObserver = new ResizeObserver(() => {
+      if (containerRef.current) {
+        // Use the smaller dimension to stay square and fit
+        setBoardWidth(Math.min(containerRef.current.offsetWidth, containerRef.current.offsetHeight));
+      }
+    });
+    resizeObserver.observe(containerRef.current);
+    return () => resizeObserver.disconnect();
+  }, []);
+
   return (
     <div
+      ref={containerRef}
       className="w-full h-full overflow-hidden rounded-md shadow-xl bg-neutral-900 leading-none text-[0px]"
       onContextMenu={(e) => {
         e.preventDefault();
@@ -201,13 +217,15 @@ export default function ChessBoard({
     >
       <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         <Chessboard
-          id="BasicBoard"
-          position={position}
-          onPieceDrop={handlePieceDrop}
-          onSquareClick={onSquareClick}
-          arePiecesDraggable={!disabled}
-          boardOrientation="white"
-          customSquareStyles={squareStyles}
+          options={{
+            position,
+            onPieceDrop: handlePieceDrop,
+            onSquareClick: onSquareClick,
+            arePiecesDraggable: !disabled,
+            boardOrientation: "white",
+            squareStyles,
+            boardWidth: boardWidth,
+          }}
         />
       </div>
     </div>

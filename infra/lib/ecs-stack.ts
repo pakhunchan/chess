@@ -56,6 +56,13 @@ export class EcsStack extends cdk.Stack {
     );
     firebaseSecret.grantRead(this.taskDefinition.taskRole);
 
+    // Gemini API Key secret
+    const geminiSecret = secretsmanager.Secret.fromSecretNameV2(
+      this, 'GeminiSecret', 'chess/gemini-api-key'
+    );
+    // Explicitly grant read to task role (following pattern, though primarily needed by execution role for env injection)
+    geminiSecret.grantRead(this.taskDefinition.taskRole);
+
     // Container Definition - built from local Dockerfile via CDK assets
     const container = this.taskDefinition.addContainer('ChessApi', {
       image: ecs.ContainerImage.fromAsset(path.join(__dirname, '../../backend')),
@@ -76,6 +83,7 @@ export class EcsStack extends cdk.Stack {
         DB_HOST: ecs.Secret.fromSecretsManager(props.dbSecret, 'host'),
         DB_PORT: ecs.Secret.fromSecretsManager(props.dbSecret, 'port'),
         FIREBASE_SERVICE_ACCOUNT_KEY: ecs.Secret.fromSecretsManager(firebaseSecret),
+        GEMINI_API_KEY: ecs.Secret.fromSecretsManager(geminiSecret, 'api_key'),
       },
       portMappings: [
         {

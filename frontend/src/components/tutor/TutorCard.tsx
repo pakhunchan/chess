@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Chess } from 'chess.js';
 import { useStockfish } from '../../hooks/useStockfish';
 import { MoveAnalysisCard } from './MoveAnalysisCard';
 
@@ -10,8 +9,8 @@ interface TutorSectionProps {
     onPreviewHover?: (pv: string | null) => void;
 }
 
-export function TutorCard({ fen, onSelectMove, orientation, onPreviewHover }: TutorSectionProps) {
-    const { isReady, lines, isAnalyzing, evaluatePosition, resetAnalysis } = useStockfish();
+export function TutorCard({ fen, onSelectMove, onPreviewHover }: TutorSectionProps) {
+    const { lines, isAnalyzing, evaluatePosition, resetAnalysis } = useStockfish();
     const [autoExplain, setAutoExplain] = useState(false);
     const [hoveredRank, setHoveredRank] = useState<number | null>(null);
 

@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Chess, type Move as ChessMove } from "chess.js";
+import { Chess } from "chess.js";
 import { Button } from "@/components/ui/button";
 import ChessBoard from "@/components/chess/ChessBoard";
 import PromotionModal from "@/components/chess/PromotionModal";
@@ -19,7 +19,6 @@ export default function Game() {
   // Game State
   const [game, setGame] = useState<GameResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [moveError, setMoveError] = useState<string | null>(null);
   const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null);
   const [pendingPromotion, setPendingPromotion] = useState<{ from: string; to: string } | null>(null);
 
@@ -56,7 +55,7 @@ export default function Game() {
           : null
       );
     },
-    onMoveError: (err) => {
+    onMoveError: () => {
       setGame((prev) =>
         prev
           ? {
@@ -66,15 +65,12 @@ export default function Game() {
           }
           : null
       );
-      setMoveError(err);
     }
   });
 
   const handleMove = async (from: string, to: string, promotion?: string) => {
     console.log("handleMove called:", { from, to, promotion, turn: game?.turn, gameStatus: game?.status });
     if (!gameId || !game || game.status === "finished") return false;
-
-    setMoveError(null);
 
     // --- Premove Queueing Logic (Opponent's Turn) ---
     if (game.turn === "black") {
@@ -86,15 +82,13 @@ export default function Game() {
 
     // Validate move locally using chess.js
     const chess = new Chess(game.current_position);
-    let moveResult: ChessMove;
     try {
-      moveResult = chess.move({
+      chess.move({
         from,
         to,
         promotion: promotion as "q" | "r" | "b" | "n" | undefined,
       });
     } catch (e) {
-      setMoveError("Invalid move");
       return false;
     }
 
@@ -150,7 +144,6 @@ export default function Game() {
           }
           : null
       );
-      setMoveError(err instanceof Error ? err.message : "Invalid move");
       return false;
     }
   };
@@ -248,18 +241,7 @@ export default function Game() {
     );
   }
 
-  const getStatusText = () => {
-    if (game.status === "finished") {
-      if (game.result === "white_win") return "You win!";
-      if (game.result === "black_win") return "Computer wins!";
-      return "Draw!";
-    }
-    // Show Premove Status
-    if (premoveQueue.length > 0) {
-      return `Premoves queued: ${premoveQueue.length}`;
-    }
-    return game.turn === "white" ? "Your turn" : "Computer thinking...";
-  };
+
 
   // Determine what position to show on the board
   // Priority: 1. Flashback Preview 2. Premove Preview 3. Game Position

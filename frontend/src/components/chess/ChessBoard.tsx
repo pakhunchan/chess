@@ -1,6 +1,6 @@
 import { Chessboard } from "react-chessboard";
-import { useMemo, useState, useRef, useEffect } from "react";
-import { Chess } from "chess.js";
+import { useMemo, useState, useRef } from "react";
+import { Chess, type Square } from "chess.js";
 
 interface ChessBoardProps {
   position: string;
@@ -27,7 +27,7 @@ export default function ChessBoard({
   function getMoveOptions(square: string) {
     const chess = new Chess(position);
     const moves = chess.moves({
-      square,
+      square: square as Square,
       verbose: true,
     });
 
@@ -43,7 +43,7 @@ export default function ChessBoard({
         const forcedFen = tokens.join(" ");
         try {
           const forcedMoves = new Chess(forcedFen).moves({
-            square,
+            square: square as Square,
             verbose: true
           });
           return forcedMoves;
@@ -56,8 +56,12 @@ export default function ChessBoard({
     return moves;
   }
 
-  function onSquareClick(args: any) { // actually SquareHandlerArgs or string depending on version, safely handle both
-    const square = typeof args === 'string' ? args : args.square;
+  function onSquareClick(args: any) {
+    // react-chessboard passes an object: { piece, square }
+    // or just square string in some versions, but we should handle the object
+    const square = typeof args === 'string' ? args : args?.square;
+
+    if (typeof square !== 'string') return;
 
     setOptionSquares({});
 
@@ -76,16 +80,17 @@ export default function ChessBoard({
       // If valid move found
       if (foundMove) {
         // Check for promotion
-        const isPromotion = foundMove.flags.includes("p") || foundMove.promotion; // chess.js flag 'p' OR manual check
-        // Simple visual chcek for pawn reaching rank 1/8
-        // But strict structured check:
-        if ((foundMove.piece === "p" && (foundMove.to[1] === "8" || foundMove.to[1] === "1"))) {
+        // chess.js flag 'p' OR manual check
+        const isPromo = (foundMove as any).flags.includes("p") || (foundMove as any).promotion;
+
+        // Simple visual check for pawn reaching rank 1/8
+        if (isPromo || ((foundMove as any).piece === "p" && (foundMove.to[1] === "8" || foundMove.to[1] === "1"))) {
           onPromotionNeeded?.(moveFrom, square);
           setMoveFrom(null);
           return;
         }
 
-        const result = onMove(moveFrom, square, foundMove.promotion);
+        onMove(moveFrom, square, (foundMove as any).promotion);
         setMoveFrom(null);
         return;
       }
@@ -105,7 +110,7 @@ export default function ChessBoard({
     newMoves.forEach((move: any) => {
       newOptions[move.to] = {
         background:
-          new Chess(position).get(move.to) && new Chess(position).get(move.to).color !== new Chess(position).get(square).color
+          new Chess(position).get(move.to as Square) && new Chess(position).get(move.to as Square)?.color !== new Chess(position).get(square as Square)?.color
             ? "radial-gradient(circle, rgba(0,0,0,.1) 85%, transparent 85%)"
             : "radial-gradient(circle, rgba(0,0,0,.15) 25%, transparent 25%)",
         borderRadius: "50%",
@@ -118,19 +123,18 @@ export default function ChessBoard({
     setOptionSquares(newOptions);
   }
 
-  const handlePieceDrop = (arg1: any, arg2?: any, arg3?: any): boolean => {
+  const handlePieceDrop = (args: any): boolean => {
     let sourceSquare: string;
     let targetSquare: string;
     let piece: any;
 
-    if (typeof arg1 === 'object' && arg1.sourceSquare && arg1.targetSquare) {
-      sourceSquare = arg1.sourceSquare;
-      targetSquare = arg1.targetSquare;
-      piece = arg1.piece;
+    if (typeof args === 'object' && args.sourceSquare && args.targetSquare) {
+      sourceSquare = args.sourceSquare;
+      targetSquare = args.targetSquare;
+      piece = args.piece;
     } else {
-      sourceSquare = arg1;
-      targetSquare = arg2;
-      piece = arg3;
+      // Fallback/Legacy support
+      return false;
     }
 
     if (!targetSquare) return false;
@@ -166,7 +170,7 @@ export default function ChessBoard({
     return result;
   };
 
-  const squareStyles = useMemo(() => {
+  const customSquareStyles = useMemo(() => {
     const styles: Record<string, React.CSSProperties> = {
       ...optionSquares // Merge click options
     };
@@ -189,20 +193,11 @@ export default function ChessBoard({
     return styles;
   }, [highlightSquares, premoveQueue, optionSquares]);
 
-  const [boardWidth, setBoardWidth] = useState(600);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const resizeObserver = new ResizeObserver(() => {
-      if (containerRef.current) {
-        // Use the smaller dimension to stay square and fit
-        setBoardWidth(Math.min(containerRef.current.offsetWidth, containerRef.current.offsetHeight));
-      }
-    });
-    resizeObserver.observe(containerRef.current);
-    return () => resizeObserver.disconnect();
-  }, []);
+  // ResizeObserver removed as boardWidth is not supported by this version of react-chessboard directly
+  // It handles responsiveness via CSS/parent container usually.
+
 
   return (
     <div
@@ -221,10 +216,9 @@ export default function ChessBoard({
             position,
             onPieceDrop: handlePieceDrop,
             onSquareClick: onSquareClick,
-            arePiecesDraggable: !disabled,
+            allowDragging: !disabled,
             boardOrientation: "white",
-            squareStyles,
-            boardWidth: boardWidth,
+            squareStyles: customSquareStyles,
           }}
         />
       </div>

@@ -2,9 +2,8 @@ fastapi==0.109.0
 uvicorn[standard]==0.27.0
 sqlalchemy==2.0.25
 psycopg2-binary==2.9.9
-python-chess==1.999
 pydantic==2.6.4
-python-chess==1.9993
+python-chess==1.999
 alembic==1.13.1
 firebase-admin==6.4.0
-google-generativeai>=0.7.0==0.3.2
+google-generativeai>=0.7.0

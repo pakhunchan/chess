@@ -1,6 +1,6 @@
-import { render, fireEvent, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import ChessBoard from "./ChessBoard";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, vi } from "vitest";
 
 // Mock react-chessboard because it relies on browser-specifics often?
 // Or try to run it. JSdom handles it usually.

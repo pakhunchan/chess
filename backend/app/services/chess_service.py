@@ -1,6 +1,6 @@
 import chess
 
-STARTING_FEN = chess.STARTING_FEN
+STARTING_FEN = "rnbkqbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBKQBNR w - - 0 1"
 
 
 class ChessService:
